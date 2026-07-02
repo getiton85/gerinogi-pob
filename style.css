@@ -134,3 +134,5 @@ body{overflow-x:hidden}
 .rune-search:focus{border-color:#ff6a18;box-shadow:0 0 0 2px rgba(255,106,24,.18)}
 .rune-results{display:flex;flex-direction:column;gap:6px;padding:8px}
 .rune-empty{padding:12px;color:#9aa8ba;font-weight:800;text-align:center}
+
+.brand{min-width:240px}.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.auth-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.auth-form input{width:112px;background:#10151d;color:#eef4ff;border:1px solid #354052;border-radius:10px;padding:9px 10px;font-weight:800}.auth-form input:focus{outline:none;border-color:#ff6a18;box-shadow:0 0 0 2px rgba(255,106,24,.18)}.auth-form span{color:#9ca8b7;font-weight:900;min-width:86px;text-align:right}.auth-form button,#resetBtn{white-space:nowrap}@media(max-width:760px){header{align-items:flex-start}.header-actions{justify-content:flex-start}.auth-form{width:100%}.auth-form input{flex:1 1 120px}.auth-form span{text-align:left}}

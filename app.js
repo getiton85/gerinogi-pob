@@ -1,10 +1,87 @@
 const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발",necklace:"목걸이",ring1:"반지1",ring2:"반지2"};
 function freshState(){return {selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
-let state=JSON.parse(localStorage.getItem("mabi_pob_v12")||"null")||freshState();
-state.selected={...POB.DEFAULT_SELECTED,...(state.selected||{})};
-state.baseline={...POB.DEFAULT_SELECTED,...(state.baseline||{})};
-function save(){localStorage.setItem("mabi_pob_v12",JSON.stringify(state))}
+const STORAGE_KEY="mabi_pob_v12";
+const AUTH_SESSION_KEY="mabi_pob_auth_session";
+function normalizeNickname(name){return String(name||"").trim()}
+function profileKey(name){return "mabi_pob_profile_"+encodeURIComponent(normalizeNickname(name).toLowerCase())}
+function normalizeState(next){
+  const base=freshState();
+  next=next||base;
+  next.selected={...POB.DEFAULT_SELECTED,...(next.selected||{})};
+  next.baseline={...POB.DEFAULT_SELECTED,...(next.baseline||{})};
+  next.classEnabled={swordsman:false,...(next.classEnabled||{})};
+  next.stats={...POB.DEFAULT_STATS,...(next.stats||{})};
+  next.env={...POB.DEFAULT_ENV,...(next.env||{})};
+  next.mode=next.mode||"raid";
+  next.rankSlot=next.rankSlot||"weapon";
+  return next;
+}
+function readJson(key){try{return JSON.parse(localStorage.getItem(key)||"null")}catch(e){return null}}
+function readProfile(name){return readJson(profileKey(name))}
+let activeProfile=readJson(AUTH_SESSION_KEY);
+function loadInitialState(){
+  if(activeProfile&&activeProfile.nickname){
+    const profile=readProfile(activeProfile.nickname);
+    if(profile&&profile.password===activeProfile.password)return normalizeState(profile.state);
+    activeProfile=null;localStorage.removeItem(AUTH_SESSION_KEY);
+  }
+  return normalizeState(readJson(STORAGE_KEY)||freshState());
+}
+let state=loadInitialState();
+function save(){
+  state=normalizeState(state);
+  if(activeProfile&&activeProfile.nickname){
+    localStorage.setItem(profileKey(activeProfile.nickname),JSON.stringify({password:activeProfile.password,state}));
+  }else{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+  }
+}
 function n(v){return Number(v)||0} function pct(v){return (Math.round(v*10)/10)+"%"} function plusPct(v){const x=Math.round(v*10)/10;return (x>=0?"+":"")+x+"%"} function fmt(v){return Math.round(v).toLocaleString()}
+
+
+const authForm=document.getElementById("authForm");
+const nicknameInput=document.getElementById("nicknameInput");
+const passwordInput=document.getElementById("passwordInput");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+const authStatus=document.getElementById("authStatus");
+const resetButton=document.getElementById("resetBtn");
+function renderAuth(){
+  const logged=!!(activeProfile&&activeProfile.nickname);
+  if(nicknameInput)nicknameInput.hidden=logged;
+  if(passwordInput)passwordInput.hidden=logged;
+  if(loginBtn)loginBtn.hidden=logged;
+  if(logoutBtn)logoutBtn.hidden=!logged;
+  if(authStatus)authStatus.textContent=logged?activeProfile.nickname+" 저장 중":"비로그인 저장";
+}
+if(authForm){
+  authForm.onsubmit=(event)=>{
+    event.preventDefault();
+    const nickname=normalizeNickname(nicknameInput.value);
+    const password=String(passwordInput.value||"");
+    if(!nickname||!password){alert("닉네임과 암호를 입력해줘.");return}
+    const profile=readProfile(nickname);
+    if(profile&&profile.password!==password){alert("암호가 맞지 않아.");return}
+    save();
+    activeProfile={nickname,password};
+    localStorage.setItem(AUTH_SESSION_KEY,JSON.stringify(activeProfile));
+    state=normalizeState(profile&&profile.state?profile.state:freshState());
+    nicknameInput.value="";
+    passwordInput.value="";
+    renderAuth();
+    renderAll();
+  };
+}
+if(logoutBtn){
+  logoutBtn.onclick=()=>{
+    save();
+    activeProfile=null;
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    state=normalizeState(readJson(STORAGE_KEY)||freshState());
+    renderAuth();
+    renderAll();
+  };
+}
 
 function runeByIdLocal(id){
   return Object.values(DB.runes).flat().find(r=>r.id===id);
@@ -190,4 +267,4 @@ function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas
 function renderRank(){document.querySelectorAll(".rank-tab").forEach(b=>{b.classList.toggle("active",b.dataset.rank===state.rankSlot);b.onclick=()=>{state.rankSlot=b.dataset.rank;renderRank()}});const slot=state.rankSlot,cat=POB.SLOT_CAT[slot];ranking.innerHTML=(DB.runes[cat]||[]).map(r=>{const sel={...state.selected,[slot]:r.id};const nv=POB.normalizedValue(DB,state,sel,"avg");return{r,diff:nv.diffPct,value:nv.valueScore}}).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · ${x.value.toFixed(2)}점</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("")}
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}
 function renderAll(){renderEquip();renderClass();renderSettings();renderDashboard();renderRank();save()}
-document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderDashboard();renderRank();save()});resetBtn.onclick=()=>{state=freshState();localStorage.removeItem("mabi_pob_v12");renderAll()};renderAll();
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderDashboard();renderRank();save()});resetButton.onclick=()=>{state=freshState();if(activeProfile&&activeProfile.nickname){localStorage.removeItem(profileKey(activeProfile.nickname))}else{localStorage.removeItem(STORAGE_KEY)}renderAuth();renderAll()};renderAuth();renderAll();

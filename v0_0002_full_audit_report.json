@@ -1,0 +1,49 @@
+{
+  "version": "v0.0002",
+  "localAllPass": true,
+  "checks": [
+    {
+      "name": "1 기능 구현",
+      "pass": true,
+      "detail": "JS 문법 통과, 검색/로그인/초기화 코드 포함"
+    },
+    {
+      "name": "2 체크리스트 검수",
+      "pass": true,
+      "detail": "버전/로그인/검색/기본없음 확인"
+    },
+    {
+      "name": "3 숫자 대조",
+      "pass": true,
+      "detail": "비딜 옵션 제외 유지, 침식 16.5% x2 = 33% 반영"
+    },
+    {
+      "name": "4 역검증",
+      "pass": true,
+      "detail": "초기화/없음/프로필 재로드 역방향 확인"
+    },
+    {
+      "name": "5 UI 검수",
+      "pass": true,
+      "detail": "헤더 로그인 UI와 모바일 대응 확인"
+    },
+    {
+      "name": "6 연결 검수",
+      "pass": true,
+      "detail": "로그인, 검색 결과, 대시보드/추천 저장 연결 확인"
+    },
+    {
+      "name": "7 회귀 테스트",
+      "pass": true,
+      "detail": "{\"counts\":{\"weapon\":17,\"emblem\":9,\"armor\":55,\"rawOption\":81},\"boundaryOk\":true}"
+    }
+  ],
+  "deployed": {
+    "status": 200,
+    "hasV0002": false,
+    "hasNewTitle": false,
+    "header": "<header><div><h1>게리노기 지멋대로 POB밸류</h1><p>v26 Expected Damage Value</p></div><button id=\"resetBtn\">초기화</button></header>"
+  },
+  "deployNote": "GitHub Pages still serves old committed/deployed HTML until commit/push/pages rebuild",
+  "generatedAt": "2026-07-02T16:18:41.275Z"
+}

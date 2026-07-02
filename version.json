@@ -1,0 +1,6 @@
+{
+  "version": "0.0002",
+  "display": "v0.0002",
+  "rule": "Every released code/data/UI change must bump this version and update index cache-buster query strings.",
+  "updatedAt": "2026-07-03T00:00:00+09:00"
+}

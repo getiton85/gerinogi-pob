@@ -1,5 +1,5 @@
 const DB = {
-  "version": "27.5-armor-raw-conditions-batch1-4",
+  "version": "27.8-profile-search-v0.0002",
   "classes": [
     {
       "id": "swordsman",
@@ -2233,7 +2233,32 @@ const DB = {
         },
         "communityTier": "SS",
         "communityTierScore": 95,
-        "communityTierReason": "침식 조건에서 추가타 확률 33%를 제공해 기대값 상승 축이 매우 강하다."
+        "communityTierReason": "침식 조건에서 추가타 확률 16.5%가 시작되고 침식 100 이상에서 2배가 되어 기대값 상승 축이 매우 강하다. 단, 침식 300 오염 페널티는 장기전 리스크다.",
+        "rawOption": {
+          "rawName": "방어구 룬: 무너진 경계",
+          "slot": "armor",
+          "rarity": "legendary",
+          "element": "dark",
+          "rawDescription": "전투 시, 1초마다 침식 수치가 5 증가한다. 침식이 부여된 동안 추가타 확률이 16.5% 증가한다. 침식 수치가 100 이상일 경우, 효과가 두 배로 증가한다. 침식 수치가 300에 도달하면 오염되며, 15초 동안 모든 효과를 잃는다. 침식과 오염은 전투 중에만 진행된다.",
+          "always": {},
+          "conditional": [
+            {
+              "type": "erosionStack",
+              "stackGainPerSec": 5,
+              "extraHitChancePct": 16.5,
+              "doubleAtStack": 100,
+              "effectiveExtraHitChancePct": 33,
+              "contaminateAtStack": 300,
+              "contaminationDurationSec": 15,
+              "combatOnly": true
+            }
+          ],
+          "damageRelevance": "침식 100 이상에서 추가타 확률 33%로 계산되어 기대딜 상승 영향이 크다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "rampUpWithContaminationPenalty",
+          "valueAdjustmentHint": "침식 100 이상 구간은 고밸류로 보되, 침식 300 오염 15초 페널티는 장기전에서 감산한다."
+        },
+        "memo": "침식 100 이상 추가타 확률 33%는 반영. 오염 페널티는 장기전 감산 리스크로 추적한다."
       },
       {
         "id": "armor_agwi",

@@ -6,6 +6,9 @@ function n(v){return Number(v)||0} function pct(v){return (Math.round(v*10)/10)+
 function runeByIdLocal(id){
   return Object.values(DB.runes).flat().find(r=>r.id===id);
 }
+function tierBadge(r){
+  return r && r.communityTier ? `<em class="tier-badge tier-${String(r.communityTier).replace("+","plus").toLowerCase()}">${r.communityTier}</em>` : "";
+}
 
 function slotDelta(slot,runeId){
   if(!runeId) return {label:"", cls:"", diff:Number.NEGATIVE_INFINITY};
@@ -28,7 +31,7 @@ function renderEquip(){
     const rows=list.map(r=>({r,d:slotDelta(slot,r.id)}))
       .sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)))
       .map(({r,d})=>`<button type="button" class="rune-choice ${d.cls}" data-slot="${slot}" data-rune="${r.id}">
-        <span>${r.name}</span><b>${d.label}</b>
+        <span>${tierBadge(r)}${r.name}</span><b>${d.label}</b>
       </button>`).join("");
     return `<div class="slot">
       <label>${label}</label>

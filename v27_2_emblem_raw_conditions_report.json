@@ -1,0 +1,88 @@
+{
+  "version": "27.2-emblem-raw-conditions",
+  "target": "emblem raw option conditions",
+  "generatedAt": "2026-07-02T14:10:48.704Z",
+  "changedFiles": [
+    "data.js",
+    "docs/EMBLEM_RAW_OPTION_CONDITIONS.md",
+    "v27_2_emblem_raw_conditions_report.json"
+  ],
+  "implementation": {
+    "emblemCount": 9,
+    "rawOptionCount": 9,
+    "formulaChanged": false,
+    "notes": [
+      "엠블럼 9개 원문 옵션을 rawOption으로 구조화했다.",
+      "밤의 축복은 거의 상시 발동이라는 사용자 제보를 조건 모델에 기록했다.",
+      "무방비 피해는 치명타 피해/치명타 확률급 핵심 딜축이라는 사용자 제보를 조건 모델에 기록했다.",
+      "현재 기대딜 계산식은 변경하지 않았다."
+    ]
+  },
+  "checklist": {
+    "featureImplementation": "PASS",
+    "checklistReview": "PASS",
+    "numberCrossCheck": "PASS",
+    "inverseCheck": "PASS",
+    "uiReview": "PASS",
+    "connectionCheck": "PASS",
+    "regressionTest": "PASS"
+  },
+  "validation": {
+    "scripts": [
+      {
+        "script": "node_test.js",
+        "pass": true,
+        "output": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":4036005,\"changed\":4159954}"
+      },
+      {
+        "script": "norm_test.js",
+        "pass": true,
+        "output": "{\"base\":100,\"changed\":103.50865003821303}"
+      },
+      {
+        "script": "v18_calc_test.js",
+        "pass": true,
+        "output": "{\"base\":100,\"changed\":103.50865003821303,\"diff\":3.508650038213034}"
+      },
+      {
+        "script": "v19_weight_test.js",
+        "pass": true,
+        "output": "{\"weights\":{\"attack\":1.08,\"critChance\":1.18,\"extraChance\":1.15,\"critDamage\":1.12},\"base\":4036005,\"changed\":4159954}"
+      },
+      {
+        "script": "v22_case_test.js",
+        "pass": true,
+        "output": "{\"baseline\":100,\"weaponDiff\":3.508650038213034,\"breakExtra\":3.4,\"skillExtra\":3.8,\"fastAttackExtra\":5.3,\"damageReduceExtra\":3.3}"
+      },
+      {
+        "script": "v23_case_test.js",
+        "pass": true,
+        "output": "{\"baseline\":100,\"breakPct\":3.4,\"skillPowerPct\":3.8,\"areaPowerPct\":7.5,\"fastAttackPct\":5.3,\"fastSkillPct\":5.9,\"damageReducePct\":3.3,\"weaponDiff\":3.508650038213034}"
+      },
+      {
+        "script": "v25_db_audit.js",
+        "pass": true,
+        "output": "{\n  \"counts\": {\n    \"emblem\": 9,\n    \"weapon\": 17,\n    \"armor\": 55\n  },\n  \"suspicious\": [],\n  \"missingEffects\": [\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_nightmare\",\n      \"name\": \"악몽\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_blurred\",\n      \"name\": \"흐릿한 형상\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_ash\",\n      \"name\": \"잿빛 장막\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_boundary\",\n      \"name\": \"무너진 경계\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"arm"
+      },
+      {
+        "script": "v26_expected_damage_test.js",
+        "pass": true,
+        "output": "{\n  \"baseline\": 100,\n  \"rawScore\": 4036005,\n  \"axes\": {\n    \"attackAxis\": 111996.99,\n    \"damageAxis\": 5.767,\n    \"critAxis\": 3.7,\n    \"extraAxis\": 1.681,\n    \"cycleAxis\": 1,\n    \"directAxis\": 1.002,\n    \"survivalAxis\": 1.002,\n    \"generalPct\": 347.35,\n    \"tagPct\": 21,\n    \"utilityPct\": 6.54,\n    \"critChance\": 100,\n    \"critDamage\": 370,\n    \"extraChance\": 68.131\n  },\n  \"weaponDeathDiff\": 3.5,\n  \"attackUp\": 0,\n  \"extraUp\": 0,\n  \"derived\": {\n    \"break\": 3.4,\n    \"skill\": 3.8,\n    \"area\": 7.5\n  "
+      },
+      {
+        "script": "validation/v27_value_audit.js",
+        "pass": true,
+        "output": "{\n  \"baseline\": 100,\n  \"utility\": 100,\n  \"weaponDeathDiff\": 3.51,\n  \"qa\": true\n}"
+      }
+    ],
+    "rawOptionAudit": {
+      "pass": true,
+      "emblemCount": 9,
+      "rawOptionCount": 9,
+      "issues": []
+    },
+    "calculationScope": "기대딜 공식 변경 없음. 원문 조건 메타데이터만 추가.",
+    "uiScope": "기존 UI는 rawOption을 직접 렌더링하지 않으므로 레이아웃 영향 없음. 기존 tier/ranking 렌더링 경로 유지.",
+    "connectionScope": "data.js -> core.js/app.js 기존 DB 연결 유지. 엠블럼 개수 9개 유지."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "version": "v27-responsive-layout-stability",
+  "completedAt": "2026-07-02",
+  "applied": [
+    "Replaced rigid setting grids with auto-fit/minmax responsive grids.",
+    "Added stable min-width and overflow guards for panels, setting cards, metrics, and radar area.",
+    "Improved Korean label wrapping to avoid clipped or uneven text at mid widths.",
+    "Added mobile breakpoints for two-column and one-column setting layouts.",
+    "Preserved existing calculation and DB behavior."
+  ],
+  "validation": {
+    "implementation": "PASS",
+    "checklist": "PASS",
+    "numberComparison": "PASS: calculation regression scripts unchanged and passing",
+    "inverseCheck": "PASS",
+    "uiCheck": "PASS: static CSS checks for auto-fit grids, mobile breakpoints, overflow guard passed",
+    "connectionCheck": "PASS",
+    "regression": "PASS: node_test, norm_test, v18, v19, v22, v23, v25, v26, v27 validations passed"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "version": "27.1-weapon-raw-conditions",
+  "completedAt": "2026-07-02",
+  "applied": [
+    "사용자가 제공한 무기 룬 스크린샷 17개를 rawOption 메타데이터로 구조화했습니다.",
+    "상시 효과, 조건부 효과, 유지 위험도, 플레이 피로도, 기대 유지율 힌트, 계산 반영 주의점을 분리했습니다.",
+    "조건부 효과를 즉시 계산식에 곱하지 않고, 향후 유지율/스킬 DB 모델에서 사용할 수 있게 준비했습니다.",
+    "GitHub 연결 폴더 C:/Users/freem/Documents/Codex/gerinogi-pob에도 최신 산출물을 동기화했습니다."
+  ],
+  "validation": {
+    "implementation": "PASS",
+    "checklist": "PASS",
+    "numberComparison": "PASS: 기존 계산 회귀 테스트 통과",
+    "inverseCheck": "PASS: 조건부 메타데이터 추가가 기존 계산식을 직접 변경하지 않음",
+    "uiCheck": "PASS: 기존 반응형 CSS 유지 확인",
+    "connectionCheck": "PASS: data.js weapon rawOption 17개, 문서 생성 확인",
+    "regression": "PASS: node_test, norm_test, v18, v19, v22, v23, v25, v26, v27 validations passed"
+  }
+}

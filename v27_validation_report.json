@@ -1,0 +1,19 @@
+{
+  "version": "v27-github-ready",
+  "completedAt": "2026-07-02",
+  "changes": [
+    "Equipment rune choices are sorted by current-setting value diff descending.",
+    "Attack speed, skill speed, casting speed, charge speed, cooldown recovery, cooldown reduction seconds, recovery, healing received, and flat heal are excluded from damage value scoring.",
+    "Expected damage mapping now includes DB damage keys such as enemyDamagePct, damagePct, targetIncomingDamageIncreasePct, unarmoredDamagePct, strongHitDamagePct, and multiHitDamagePct.",
+    "Project documentation and GitHub Pages marker were added."
+  ],
+  "validation": {
+    "implementation": "PASS",
+    "checklist": "PASS",
+    "numberComparison": "PASS: baseline 100, utility-only rune 100, utility diff 0",
+    "inverseCheck": "PASS: utility-only option does not increase value; damage weapon still changes value",
+    "uiCheck": "PASS: static UI checks passed; browser screenshot blocked because Playwright browser executable is not installed",
+    "connectionCheck": "PASS: index script order and DB/core/app links verified",
+    "regression": "PASS: node_test, norm_test, v18, v19, v22, v23, v25, v26, v27 validations passed"
+  }
+}

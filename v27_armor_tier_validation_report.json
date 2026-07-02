@@ -1,0 +1,31 @@
+{
+  "version": "v27-armor-community-tier-foundation",
+  "completedAt": "2026-07-02",
+  "applied": [
+    "Added communityTier, communityTierScore, and communityTierReason to all 55 armor runes.",
+    "Added armor tier analysis document for future season tuning.",
+    "Displayed community tier badges in rune choice and ranking UI.",
+    "Kept expected damage calculation numeric-first; community tiers do not override calculated value."
+  ],
+  "tierDistribution": {
+    "SSS": 1,
+    "SS": 4,
+    "S+": 13,
+    "S": 7,
+    "A+": 2,
+    "A": 5,
+    "B": 4,
+    "C": 4,
+    "D": 8,
+    "F": 7
+  },
+  "validation": {
+    "implementation": "PASS",
+    "checklist": "PASS",
+    "numberComparison": "PASS",
+    "inverseCheck": "PASS",
+    "uiCheck": "PASS: tier badge rendering hooks and CSS verified",
+    "connectionCheck": "PASS: data/core/app order and DB metadata verified",
+    "regression": "PASS: node_test, norm_test, v18, v19, v22, v23, v25, v26, v27 validations passed"
+  }
+}

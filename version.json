@@ -1,6 +1,7 @@
 {
-  "version": "0.0002",
-  "display": "v0.0002",
+  "version": "0.0003",
+  "display": "v0.0003",
   "rule": "Every released code/data/UI change must bump this version and update index cache-buster query strings.",
-  "updatedAt": "2026-07-03T00:00:00+09:00"
+  "updatedAt": "2026-07-03T00:00:00+09:00",
+  "note": "Force GitHub Pages redeploy because v0.0002 raw files were updated but Pages served an older artifact."
 }

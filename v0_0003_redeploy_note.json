@@ -1,0 +1,6 @@
+{
+  "version": "v0.0003",
+  "reason": "force GitHub Pages redeploy after deployment_queued timeout",
+  "expectedTitle": "게리롱 멋대로 POB식 밸류",
+  "expectedVersion": "v0.0003"
+}

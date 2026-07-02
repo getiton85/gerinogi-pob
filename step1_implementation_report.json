@@ -1,0 +1,12 @@
+{
+  "step": "1 기능 구현",
+  "status": "implemented_not_released",
+  "changes": [
+    "상단 버전 v24 Gate Checked로 변경",
+    "DEFAULT_STATS를 실제 스탯창 기준값으로 재정의",
+    "브레이크/스킬위력/광역강화/빠른공격/빠른스킬/피해감소 환산 공식을 실제 기준값 대비 추가분으로 재정의",
+    "UI 출력은 plusPct(derived.*) 형태로 추가분만 표시",
+    "입력칸 스피너 제거 상태 유지"
+  ],
+  "work_dir": "/mnt/data/gerinogi_pob_value_v24_gate_work/gerinogi_pob_value_v23_percent_fix"
+}

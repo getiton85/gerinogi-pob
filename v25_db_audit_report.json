@@ -1,0 +1,46 @@
+{
+  "status": "TEMP_PASS",
+  "note": "스킬 DB 추가 전 임시 사용본. 룬 DB 임시명 전수검사 완료.",
+  "suspects_before_count": 3,
+  "suspects_before_sample": [
+    {
+      "pattern": "저주의 룬 A",
+      "match": "저주의 룬 A",
+      "context": "3.5\n        },\n        \"memo\": \"궁극기 불씨 중첩은 별도 평균화 필요\"\n      },\n      {\n        \"id\": \"weapon_curse_a\",\n        \"name\": \"저주의 룬 A\",\n        \"tag\": \"용\",\n        \"effects\": {\n          \"flatAttack\": 1038,\n          \"enemyDamagePct\": 20,\n          \"att"
+    },
+    {
+      "pattern": "저주의 룬 B",
+      "match": "저주의 룬 B",
+      "context": "ps\": 20000,\n        \"memo\": \"5초마다 최대체력 비례 피해는 임시 DPS\"\n      },\n      {\n        \"id\": \"weapon_curse_b\",\n        \"name\": \"저주의 룬 B\",\n        \"tag\": \"용\",\n        \"effects\": {\n          \"flatAttack\": 1038,\n          \"attackPct\": 30,\n          \"critDama"
+    },
+    {
+      "pattern": "임시",
+      "match": "임시",
+      "context": "SpeedPct\": 10,\n          \"skillSpeedPct\": 10\n        },\n        \"periodicDps\": 20000,\n        \"memo\": \"5초마다 최대체력 비례 피해는 임시 DPS\"\n      },\n      {\n        \"id\": \"weapon_curse_b\",\n        \"name\": \"저주의 룬 B\",\n        \"tag\": \"용\",\n        \"effects\":"
+    }
+  ],
+  "checks": {
+    "app_syntax": {
+      "pass": true,
+      "output": ""
+    },
+    "core_self_test": {
+      "pass": true,
+      "output": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":4964885,\"changed\":5098932}"
+    },
+    "db_audit": {
+      "pass": true,
+      "output": "{\n  \"counts\": {\n    \"emblem\": 9,\n    \"weapon\": 17,\n    \"armor\": 55\n  },\n  \"suspicious\": [],\n  \"missingEffects\": [\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_nightmare\",\n      \"name\": \"악몽\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_blurred\",\n      \"name\": \"흐릿한 형상\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_ash\",\n      \"name\": \"잿빛 장막\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_boundary\",\n      \"name\": \"무너진 경계\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_cracked\",\n      \"name\": \"금 간 봉인\"\n    }\n  ],\n  \"baseline\": 100,\n  \"selfTest\": true\n}"
+    },
+    "static_checks": {
+      "pass": true,
+      "details": {
+        "version_updated": true,
+        "bad_jeoju_A_removed": true,
+        "bad_jeoju_B_removed": true,
+        "fixed_names_present": true,
+        "db_counts": true
+      }
+    }
+  }
+}

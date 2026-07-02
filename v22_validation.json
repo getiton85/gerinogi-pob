@@ -1,0 +1,35 @@
+{
+  "core_self_test": {
+    "pass": true,
+    "out": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":3307665,\"changed\":3408299}"
+  },
+  "app_syntax": {
+    "pass": true,
+    "out": ""
+  },
+  "case_test": {
+    "pass": true,
+    "out": "{\"baseline\":100,\"weaponDiff\":1.9149121869963324,\"breakExtra\":3.4,\"skillExtra\":3.8,\"fastAttackExtra\":5.3,\"damageReduceExtra\":3.3}"
+  },
+  "static_asserts": {
+    "title_kept": true,
+    "input_spinner_removed": true,
+    "small_text_removed": true,
+    "plus_extra_enabled": true,
+    "dashboard_uses_normalized": true,
+    "colored_compare_kept": true,
+    "left_scroll_kept": true,
+    "broken_v21_override_absent": true,
+    "db_emblem_9": true,
+    "db_weapon_17": true,
+    "db_armor_55": true
+  },
+  "required_files": {
+    "index.html": true,
+    "style.css": true,
+    "app.js": true,
+    "core.js": true,
+    "data.js": true,
+    "README.md": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "emblem": 9,
+    "weapon": 17,
+    "armor": 55,
+    "accessory": 0
+  },
+  "duplicates": [],
+  "basic_expectations": {
+    "emblem": true,
+    "weapon": true,
+    "armor": true,
+    "duplicate_free": true
+  }
+}

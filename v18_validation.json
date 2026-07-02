@@ -1,0 +1,6 @@
+{
+  "node_self_test": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":3577166,\"changed\":3657205}",
+  "app_syntax": "pass",
+  "normalized_delta": "{\"base\":100,\"changed\":101.67244841502199,\"diff\":1.6724484150219894}",
+  "ui": "custom colored rune selector"
+}

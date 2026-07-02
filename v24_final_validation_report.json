@@ -1,0 +1,173 @@
+{
+  "status": "PASS",
+  "steps": {
+    "1_implementation": "PASS",
+    "2_checklist": {
+      "step": "2 체크리스트 검수",
+      "total": 33,
+      "pass": 33,
+      "fail": [],
+      "groups": {
+        "A_DB": {
+          "emblem_9": true,
+          "weapon_17": true,
+          "armor_55": true,
+          "direct_damage_kept": true,
+          "state_tags_kept": true
+        },
+        "B_equipment": {
+          "slot_labels": true,
+          "slot_compare_function": true,
+          "current_mark": true,
+          "colored_compare": true
+        },
+        "C_calc": {
+          "normalized_value": true,
+          "baseline_100_formula": true,
+          "raid_abyss_mode": true,
+          "avg_min_max": true
+        },
+        "D_passive": {
+          "swordsman_toggle": true,
+          "class_enabled": true,
+          "passive_db": true
+        },
+        "E_auto_conversion": {
+          "crit_extra_strong_multi": true,
+          "break_formula": true,
+          "skill_formula": true,
+          "area_formula": true,
+          "fast_attack_formula": true,
+          "fast_skill_formula": true,
+          "damage_reduce_formula": true,
+          "ui_plus_only": true
+        },
+        "F_UI": {
+          "title": true,
+          "version": true,
+          "left_scroll": true,
+          "spinner_removed": true,
+          "bad_grid_absent": true,
+          "small_text_removed": true
+        },
+        "G_storage": {
+          "local_storage": true,
+          "reset_button": true,
+          "save_baseline": true
+        }
+      }
+    },
+    "3_number_check": {
+      "derived": {
+        "breakPct": 3.4,
+        "skillPowerPct": 3.8,
+        "areaPowerPct": 7.5,
+        "fastAttackPct": 5.3,
+        "fastSkillPct": 5.9,
+        "damageReducePct": 3.3
+      },
+      "baseline": 100,
+      "rawScore": 4964885
+    },
+    "4_inverse_check": {
+      "zero": {
+        "break": 0,
+        "skill": 0,
+        "fast": 0,
+        "reduce": 0
+      },
+      "half": {
+        "break": 1.7,
+        "skill": 1.9,
+        "fast": 2.7,
+        "reduce": 1.7
+      },
+      "double": {
+        "break": 6.8,
+        "skill": 7.6,
+        "fast": 10.6,
+        "reduce": 6.6
+      }
+    },
+    "5_ui_check": {
+      "title": true,
+      "version": true,
+      "spinner_removed": true,
+      "bad_grid_absent": true,
+      "left_scroll": true,
+      "rune_scroll": true,
+      "colored_up_down": true,
+      "small_text_removed": true,
+      "plus_only": true
+    },
+    "6_connection_check": {
+      "base": 100,
+      "weaponDiff": 1.9151302368519225,
+      "statChanged": true,
+      "passiveChanged": true,
+      "modeChanged": true,
+      "topWeapon": {
+        "name": "계시+",
+        "value": 110.52514650403565,
+        "diff": 10.525146504035646
+      }
+    },
+    "7_regression_check": {
+      "selfTest": true,
+      "counts": {
+        "emblem": 9,
+        "weapon": 17,
+        "armor": 55,
+        "accessory": 0
+      },
+      "defaultIds": "ok",
+      "normalized": 100
+    }
+  },
+  "checks": {
+    "step3_number_check": {
+      "pass": true,
+      "output": "{\"derived\":{\"breakPct\":3.4,\"skillPowerPct\":3.8,\"areaPowerPct\":7.5,\"fastAttackPct\":5.3,\"fastSkillPct\":5.9,\"damageReducePct\":3.3},\"baseline\":100,\"rawScore\":4964885}"
+    },
+    "step4_inverse_check": {
+      "pass": true,
+      "output": "{\"zero\":{\"break\":0,\"skill\":0,\"fast\":0,\"reduce\":0},\"half\":{\"break\":1.7,\"skill\":1.9,\"fast\":2.7,\"reduce\":1.7},\"double\":{\"break\":6.8,\"skill\":7.6,\"fast\":10.6,\"reduce\":6.6}}"
+    },
+    "step5_app_syntax": {
+      "pass": true,
+      "output": ""
+    },
+    "step5_ui_static": {
+      "pass": true,
+      "details": {
+        "title": true,
+        "version": true,
+        "spinner_removed": true,
+        "bad_grid_absent": true,
+        "left_scroll": true,
+        "rune_scroll": true,
+        "colored_up_down": true,
+        "small_text_removed": true,
+        "plus_only": true
+      }
+    },
+    "step6_connection_check": {
+      "pass": true,
+      "output": "{\"base\":100,\"weaponDiff\":1.9151302368519225,\"statChanged\":true,\"passiveChanged\":true,\"modeChanged\":true,\"topWeapon\":{\"name\":\"계시+\",\"value\":110.52514650403565,\"diff\":10.525146504035646}}"
+    },
+    "step7_regression_check": {
+      "pass": true,
+      "output": "{\"selfTest\":true,\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"defaultIds\":\"ok\",\"normalized\":100}"
+    },
+    "final_static": {
+      "pass": true,
+      "details": {
+        "db_counts": true,
+        "normalized_exists": true,
+        "storage_exists": true,
+        "no_bad_percent_ui": true,
+        "version_correct": true
+      }
+    }
+  }
+}

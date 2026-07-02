@@ -1,0 +1,32 @@
+{
+  "status": "TEST_PASS",
+  "note": "스킬 DB 추가 전 기대딜 기반 밸류 검수판",
+  "checks": {
+    "app_syntax": {
+      "pass": true,
+      "output": ""
+    },
+    "core_self_test": {
+      "pass": true,
+      "output": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":1713129,\"changed\":1765741}"
+    },
+    "db_audit": {
+      "pass": true,
+      "output": "{\n  \"counts\": {\n    \"emblem\": 9,\n    \"weapon\": 17,\n    \"armor\": 55\n  },\n  \"suspicious\": [],\n  \"missingEffects\": [\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_nightmare\",\n      \"name\": \"악몽\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_blurred\",\n      \"name\": \"흐릿한 형상\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_ash\",\n      \"name\": \"잿빛 장막\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_boundary\",\n      \"name\": \"무너진 경계\"\n    },\n    {\n      \"cat\": \"armor\",\n      \"id\": \"armor_cracked\",\n      \"name\": \"금 간 봉인\"\n    }\n  ],\n  \"baseline\": 100,\n  \"selfTest\": true\n}"
+    },
+    "expected_damage": {
+      "pass": true,
+      "output": "{\n  \"baseline\": 100,\n  \"rawScore\": 1713129,\n  \"axes\": {\n    \"attackAxis\": 111996.99,\n    \"damageAxis\": 2.405,\n    \"critAxis\": 3.7,\n    \"extraAxis\": 1.681,\n    \"cycleAxis\": 1.017,\n    \"directAxis\": 1.002,\n    \"survivalAxis\": 1.003,\n    \"generalPct\": 120,\n    \"tagPct\": 0,\n    \"utilityPct\": 9.34,\n    \"critChance\": 100,\n    \"critDamage\": 370,\n    \"extraChance\": 68.131\n  },\n  \"weaponDeathDiff\": 3.5,\n  \"attackUp\": 0,\n  \"extraUp\": 0,\n  \"derived\": {\n    \"break\": 3.4,\n    \"skill\": 3.8,\n    \"area\": 7.5\n  }\n}"
+    },
+    "static": {
+      "pass": true,
+      "details": {
+        "version_v26": true,
+        "expected_engine_exists": true,
+        "normalized_uses_expected": true,
+        "expected_exported": true,
+        "db_counts": true
+      }
+    }
+  }
+}

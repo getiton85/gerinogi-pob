@@ -1,0 +1,22 @@
+{
+  "core_self_test": {
+    "pass": true,
+    "out": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":3307665,\"changed\":3408299}"
+  },
+  "app_syntax": {
+    "pass": true,
+    "out": ""
+  },
+  "percent_case_test": {
+    "pass": true,
+    "out": "{\"baseline\":100,\"breakPct\":3.4,\"skillPowerPct\":3.8,\"areaPowerPct\":7.5,\"fastAttackPct\":5.3,\"fastSkillPct\":5.9,\"damageReducePct\":3.3,\"weaponDiff\":1.9149121869963324}"
+  },
+  "static_asserts": {
+    "ui_no_minus_100": true,
+    "core_no_minus_100_bonus": true,
+    "derived_break_3_4_formula": true,
+    "derived_skill_3_8_formula": true,
+    "colored_compare_kept": true,
+    "db_counts": true
+  }
+}

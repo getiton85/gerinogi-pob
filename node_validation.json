@@ -1,0 +1,6 @@
+{
+  "node_available": true,
+  "syntax_pass": true,
+  "self_test_pass": true,
+  "output": "{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0}\n"
+}

@@ -1,0 +1,5 @@
+{
+  "node_self_test": "{\"counts\":{\"emblem\":9,\"weapon\":17,\"armor\":55,\"accessory\":0},\"score\":5038008,\"changed\":5159912}",
+  "app_syntax": "pass",
+  "weight_test": "{\"weights\":{\"attack\":1.08,\"critChance\":1.18,\"extraChance\":1.15,\"critDamage\":1.12},\"base\":5038008,\"changed\":5308739}"
+}

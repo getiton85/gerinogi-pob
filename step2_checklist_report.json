@@ -1,0 +1,55 @@
+{
+  "step": "2 체크리스트 검수",
+  "total": 33,
+  "pass": 33,
+  "fail": [],
+  "groups": {
+    "A_DB": {
+      "emblem_9": true,
+      "weapon_17": true,
+      "armor_55": true,
+      "direct_damage_kept": true,
+      "state_tags_kept": true
+    },
+    "B_equipment": {
+      "slot_labels": true,
+      "slot_compare_function": true,
+      "current_mark": true,
+      "colored_compare": true
+    },
+    "C_calc": {
+      "normalized_value": true,
+      "baseline_100_formula": true,
+      "raid_abyss_mode": true,
+      "avg_min_max": true
+    },
+    "D_passive": {
+      "swordsman_toggle": true,
+      "class_enabled": true,
+      "passive_db": true
+    },
+    "E_auto_conversion": {
+      "crit_extra_strong_multi": true,
+      "break_formula": true,
+      "skill_formula": true,
+      "area_formula": true,
+      "fast_attack_formula": true,
+      "fast_skill_formula": true,
+      "damage_reduce_formula": true,
+      "ui_plus_only": true
+    },
+    "F_UI": {
+      "title": true,
+      "version": true,
+      "left_scroll": true,
+      "spinner_removed": true,
+      "bad_grid_absent": true,
+      "small_text_removed": true
+    },
+    "G_storage": {
+      "local_storage": true,
+      "reset_button": true,
+      "save_baseline": true
+    }
+  }
+}

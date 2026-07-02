@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>마비노기 모바일 POB v12 Trusted</title><link rel="stylesheet" href="style.css"/></head>
+<body>
+<header><div><h1>게리노기 지멋대로 POB밸류</h1><p>v26 Expected Damage Value</p></div><button id="resetBtn">초기화</button></header>
+<main class="layout">
+<aside class="panel equip-panel"><h2>현재 장착</h2><div id="equipSlots"></div></aside>
+<section class="maincol">
+<section class="panel dashboard">
+<div class="topline"><div><h2>대시보드</h2><div class="mode-row"><button data-mode="raid" class="mode active">레이드</button><button data-mode="abyss" class="mode">어비스</button></div></div><div class="scorebox"><b>밸류점수</b><span id="scoreValue">0</span></div></div>
+<div class="state-cards" id="stateCards"></div>
+<div class="radar-wrap"><canvas id="radar" width="460" height="340"></canvas><div id="metrics" class="metrics"></div></div>
+<div id="bars" class="bars"></div>
+</section>
+<section class="panel"><details class="class-box"><summary><span>검술사 패시브</span><button id="swordsmanToggle" type="button" class="class-toggle on">ON</button></summary><div id="classPassiveList" class="compact-list"></div></details></section>
+<section class="panel"><h2>상태/환경 입력</h2><div class="form-grid" id="settings"></div><p class="hint">스탯창 공격력은 기준값. 룬 교체 시 공격력%는 기준 세팅 대비 차이만 반영.</p><button id="saveBaseline">현재 장착을 기준 세팅으로 저장</button></section>
+<section class="panel"><h2>룬 추천 순위</h2><div class="mode-row"><button data-rank="emblem" class="rank-tab active">엠블럼</button><button data-rank="weapon" class="rank-tab">무기</button><button data-rank="head" class="rank-tab">방어구</button></div><div id="ranking"></div></section>
+<section class="panel"><h2>밸류점수 기준</h2>
+<div class="formula-box">
+<b>밸류점수 = 장비 비교용 상대 점수</b>
+<p>실제 게임 DPS가 아니라, 현재 기준 세팅을 100.00으로 고정한 상대 비교 점수다.</p>
+<code>현재 기준 세팅 = 100.00 / 교체 세팅 = 원점수 ÷ 기준 원점수 × 100</code>
+<p>추천 순위는 현재 장착 세팅을 기준으로 해당 슬롯만 바꿨을 때 밸류점수가 얼마나 오르는지 계산한다.</p><p><b>고밸류 보정:</b> 공격력 ×1.08, 치명타 확률 ×1.18, 추가타 확률 ×1.15, 치명타 피해 ×1.12</p>
+</div></section>
+<section class="panel"><h2>QA 검수 결과</h2><div id="qaPanel" class="audit"></div></section>
+</section></main>
+<script src="data.js"></script><script src="core.js"></script><script src="app.js"></script></body></html>

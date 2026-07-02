@@ -128,3 +128,9 @@ body{overflow-x:hidden}
 @media(max-width:420px){
   #settings>.input-group>.form-grid,#settings>.input-group .derived-grid{grid-template-columns:1fr}
 }
+
+.rune-search-wrap{position:sticky;top:0;z-index:2;background:#0f1722;padding:8px;border-bottom:1px solid #26364a}
+.rune-search{width:100%;min-height:38px;border:1px solid #334155;border-radius:8px;background:#111a26;color:#eef4ff;padding:8px 10px;font-weight:800;outline:none}
+.rune-search:focus{border-color:#ff6a18;box-shadow:0 0 0 2px rgba(255,106,24,.18)}
+.rune-results{display:flex;flex-direction:column;gap:6px;padding:8px}
+.rune-empty{padding:12px;color:#9aa8ba;font-weight:800;text-align:center}

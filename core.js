@@ -1,6 +1,6 @@
 const POB = (() => {
 const SLOT_CAT={emblem:"emblem",weapon:"weapon",head:"armor",top:"armor",bottom:"armor",gloves:"armor",shoes:"armor",necklace:"accessory",ring1:"accessory",ring2:"accessory"};
-const DEFAULT_SELECTED={emblem:"emblem_faded_star",weapon:"weapon_glory",head:"armor_basic",top:"armor_first_oath",bottom:"armor_boundary",gloves:"armor_cracked",shoes:"armor_iceclaw",necklace:"",ring1:"",ring2:""};
+const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",shoes:"",necklace:"",ring1:"",ring2:""};
 const DEFAULT_STATS={attack:57582,defense:18542,breakPower:2914,strongStat:4957,comboStat:1532,skillPower:2729,areaPower:1412,recoveryPower:2468,weakpointDodge:1358,extraStat:2797,damageReduce:2998,fastAttack:2047,multiStat:1681,fastSkill:1757,extraHp:27183,ultimatePower:1366,critStat:8649,critDamageBase:300};
 const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightTraceLevel:45,galeStacksMax:5};
 
@@ -215,12 +215,12 @@ function validate(db){
   result.push({name:"엠블럼 9개",pass:counts.emblem===9,detail:`${counts.emblem}개`});
   result.push({name:"무기 17개",pass:counts.weapon===17,detail:`${counts.weapon}개`});
   result.push({name:"방어구 55개",pass:counts.armor===55,detail:`${counts.armor}개`});
-  result.push({name:"기본 장착 ID",pass:missing.length===0,detail:missing.length?missing.join(", "):"정상"});
+  result.push({name:"기본 장착 비움",pass:required.length===0,detail:required.length?required.join(", "):"무장착"});
   return{counts,dup,missing,result};
 }
 
 function runSelfTest(db){
-  const state={selected:{...DEFAULT_SELECTED},baseline:{...DEFAULT_SELECTED},classEnabled:{swordsman:true},mode:"raid",stats:{...DEFAULT_STATS},env:{...DEFAULT_ENV}};
+  const state={selected:{...DEFAULT_SELECTED},baseline:{...DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",stats:{...DEFAULT_STATS},env:{...DEFAULT_ENV}};
   const val=validate(db);
   const c1=calc(db,state,state.selected,"avg");
   state.classEnabled.swordsman=false;

@@ -1,5 +1,8 @@
 const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발",necklace:"목걸이",ring1:"반지1",ring2:"반지2"};
-let state=JSON.parse(localStorage.getItem("mabi_pob_v12")||"null")||{selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:true},mode:"raid",rankSlot:"weapon",stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}};
+function freshState(){return {selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
+let state=JSON.parse(localStorage.getItem("mabi_pob_v12")||"null")||freshState();
+state.selected={...POB.DEFAULT_SELECTED,...(state.selected||{})};
+state.baseline={...POB.DEFAULT_SELECTED,...(state.baseline||{})};
 function save(){localStorage.setItem("mabi_pob_v12",JSON.stringify(state))}
 function n(v){return Number(v)||0} function pct(v){return (Math.round(v*10)/10)+"%"} function plusPct(v){const x=Math.round(v*10)/10;return (x>=0?"+":"")+x+"%"} function fmt(v){return Math.round(v).toLocaleString()}
 
@@ -9,11 +12,25 @@ function runeByIdLocal(id){
 function tierBadge(r){
   return r && r.communityTier ? `<em class="tier-badge tier-${String(r.communityTier).replace("+","plus").toLowerCase()}">${r.communityTier}</em>` : "";
 }
+function normalizeSearchText(text){return String(text||"").toLowerCase().replace(/\s+/g,"").replace(/[+]/g,"")}
+function choseong(text){
+  const base=0xac00, initial=["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+  return String(text||"").split("").map(ch=>{
+    const code=ch.charCodeAt(0)-base;
+    return code>=0&&code<=11171 ? initial[Math.floor(code/588)] : ch;
+  }).join("");
+}
+function runeMatchesQuery(r,query){
+  const q=normalizeSearchText(query);
+  if(!q)return true;
+  const hay=normalizeSearchText((r.name||"")+" "+(r.tag||"")+" "+(r.communityTier||""));
+  const cho=normalizeSearchText(choseong((r.name||"")+" "+(r.tag||"")));
+  return hay.includes(q)||cho.includes(q);
+}
 
 function slotDelta(slot,runeId){
-  if(!runeId) return {label:"", cls:"", diff:Number.NEGATIVE_INFINITY};
-  const currentId = state.selected[slot];
-  if(!currentId) return {label:"", cls:"", diff:0};
+  const currentId = state.selected[slot] || "";
+  runeId = runeId || "";
   if(runeId === currentId) return {label:"현재", cls:"same", diff:0};
 
   const current = POB.normalizedValue(DB,state,state.selected,"avg").valueScore;
@@ -24,43 +41,57 @@ function slotDelta(slot,runeId){
   return {label, cls: diff >= 0 ? "up" : "down", diff};
 }
 
-function renderEquip(){
-  equipSlots.innerHTML=Object.entries(SLOT_LABELS).map(([slot,label])=>{
-    const cat=POB.SLOT_CAT[slot], list=DB.runes[cat]||[];
-    const current=runeByIdLocal(state.selected[slot]);
-    const rows=list.map(r=>({r,d:slotDelta(slot,r.id)}))
-      .sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)))
-      .map(({r,d})=>`<button type="button" class="rune-choice ${d.cls}" data-slot="${slot}" data-rune="${r.id}">
-        <span>${tierBadge(r)}${r.name}</span><b>${d.label}</b>
-      </button>`).join("");
-    return `<div class="slot">
-      <label>${label}</label>
-      <button type="button" class="slot-toggle" data-slot="${slot}">
-        <span>${current ? current.name : "없음"}</span>
-        <small>열기</small>
-      </button>
-      <div class="slot-current">현재 기준: <b>${current ? current.name : "미장착"}</b></div>
-      <div class="rune-menu" id="menu_${slot}">${rows}</div>
-    </div>`;
-  }).join("");
-
-  equipSlots.querySelectorAll(".slot-toggle").forEach(btn=>{
+function renderRuneRows(slot,query=""){
+  const cat=POB.SLOT_CAT[slot], list=DB.runes[cat]||[];
+  const noneChoice={r:{id:"",name:"없음",tag:"",communityTier:""},d:slotDelta(slot,"")};
+  const runeRows=list.filter(r=>runeMatchesQuery(r,query)).map(r=>({r,d:slotDelta(slot,r.id)}))
+    .sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)));
+  const allRows=[noneChoice,...runeRows];
+  if(allRows.length===1 && query)return '<div class="rune-empty">검색 결과 없음</div>'+renderRuneButton(slot,noneChoice.r,noneChoice.d);
+  return allRows.map(({r,d})=>renderRuneButton(slot,r,d)).join("");
+}
+function renderRuneButton(slot,r,d){
+  return '<button type="button" class="rune-choice '+d.cls+'" data-slot="'+slot+'" data-rune="'+r.id+'">'+
+    '<span>'+tierBadge(r)+r.name+'</span><b>'+d.label+'</b></button>';
+}
+function bindRuneChoices(root=equipSlots){
+  root.querySelectorAll(".rune-choice").forEach(btn=>{
     btn.onclick=()=>{
-      const slot=btn.dataset.slot;
-      const menu=document.getElementById(`menu_${slot}`);
-      if(!menu) return;
-      const willOpen=!menu.classList.contains("open");
-      document.querySelectorAll(".rune-menu").forEach(m=>m.classList.remove("open"));
-      if(willOpen) menu.classList.add("open");
-    };
-  });
-
-  equipSlots.querySelectorAll(".rune-choice").forEach(btn=>{
-    btn.onclick=()=>{
-      state.selected[btn.dataset.slot]=btn.dataset.rune;
+      state.selected[btn.dataset.slot]=btn.dataset.rune || "";
       renderAll();
     };
   });
+}
+function renderEquip(){
+  equipSlots.innerHTML=Object.entries(SLOT_LABELS).map(([slot,label])=>{
+    const current=runeByIdLocal(state.selected[slot]);
+    return '<div class="slot"><label>'+label+'</label>'+
+      '<button type="button" class="slot-toggle" data-slot="'+slot+'"><span>'+(current?current.name:"없음")+'</span><small>열기</small></button>'+
+      '<div class="slot-current">현재 기준: <b>'+(current?current.name:"미장착")+'</b></div>'+
+      '<div class="rune-menu" id="menu_'+slot+'">'+
+      '<div class="rune-search-wrap"><input class="rune-search" data-slot="'+slot+'" type="search" placeholder="룬 이름/초성 검색" autocomplete="off"></div>'+
+      '<div class="rune-results" id="results_'+slot+'">'+renderRuneRows(slot)+'</div></div></div>';
+  }).join("");
+  equipSlots.querySelectorAll(".slot-toggle").forEach(btn=>{
+    btn.onclick=()=>{
+      const slot=btn.dataset.slot;
+      const menu=document.getElementById("menu_"+slot);
+      if(!menu)return;
+      const willOpen=!menu.classList.contains("open");
+      document.querySelectorAll(".rune-menu").forEach(m=>m.classList.remove("open"));
+      if(willOpen){menu.classList.add("open");const input=menu.querySelector(".rune-search");if(input)setTimeout(()=>input.focus(),0)}
+    };
+  });
+  equipSlots.querySelectorAll(".rune-search").forEach(input=>{
+    input.oninput=()=>{
+      const slot=input.dataset.slot;
+      const results=document.getElementById("results_"+slot);
+      results.innerHTML=renderRuneRows(slot,input.value);
+      bindRuneChoices(results);
+    };
+    input.onclick=e=>e.stopPropagation();
+  });
+  bindRuneChoices();
 }
 
 function renderClass(){const on=state.classEnabled.swordsman;swordsmanToggle.textContent=on?"ON":"OFF";swordsmanToggle.className="class-toggle "+(on?"on":"off");swordsmanToggle.onclick=e=>{e.preventDefault();e.stopPropagation();state.classEnabled.swordsman=!state.classEnabled.swordsman;renderAll()};classPassiveList.innerHTML=DB.classes[0].passives.map(p=>`<div class="passive-mini ${on?"":"off"}"><b>${p.name}</b><small>${p.note||""}</small></div>`).join("")}
@@ -159,4 +190,4 @@ function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas
 function renderRank(){document.querySelectorAll(".rank-tab").forEach(b=>{b.classList.toggle("active",b.dataset.rank===state.rankSlot);b.onclick=()=>{state.rankSlot=b.dataset.rank;renderRank()}});const slot=state.rankSlot,cat=POB.SLOT_CAT[slot];ranking.innerHTML=(DB.runes[cat]||[]).map(r=>{const sel={...state.selected,[slot]:r.id};const nv=POB.normalizedValue(DB,state,sel,"avg");return{r,diff:nv.diffPct,value:nv.valueScore}}).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · ${x.value.toFixed(2)}점</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("")}
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}
 function renderAll(){renderEquip();renderClass();renderSettings();renderDashboard();renderRank();save()}
-document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderDashboard();renderRank();save()});resetBtn.onclick=()=>{localStorage.removeItem("mabi_pob_v12");location.reload()};renderAll();
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderDashboard();renderRank();save()});resetBtn.onclick=()=>{state=freshState();localStorage.removeItem("mabi_pob_v12");renderAll()};renderAll();

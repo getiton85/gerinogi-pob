@@ -1,14 +1,15 @@
-const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발",necklace:"목걸이",ring1:"반지1",ring2:"반지2"};
+const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
 function freshState(){return {selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
 const STORAGE_KEY="mabi_pob_v12";
 const AUTH_SESSION_KEY="mabi_pob_auth_session";
 function normalizeNickname(name){return String(name||"").trim()}
 function profileKey(name){return "mabi_pob_profile_"+encodeURIComponent(normalizeNickname(name).toLowerCase())}
+function sanitizeSelection(sel){const clean={...POB.DEFAULT_SELECTED};for(const key of Object.keys(clean))clean[key]=(sel&&sel[key])||"";return clean}
 function normalizeState(next){
   const base=freshState();
   next=next||base;
-  next.selected={...POB.DEFAULT_SELECTED,...(next.selected||{})};
-  next.baseline={...POB.DEFAULT_SELECTED,...(next.baseline||{})};
+  next.selected=sanitizeSelection(next.selected);
+  next.baseline=sanitizeSelection(next.baseline);
   next.classEnabled={swordsman:false,...(next.classEnabled||{})};
   next.stats={...POB.DEFAULT_STATS,...(next.stats||{})};
   next.env={...POB.DEFAULT_ENV,...(next.env||{})};
@@ -136,6 +137,7 @@ function bindRuneChoices(root=equipSlots){
     btn.onclick=()=>{
       state.selected[btn.dataset.slot]=btn.dataset.rune || "";
       renderAll();
+      save();
     };
   });
 }
@@ -146,7 +148,7 @@ function renderEquip(){
       '<button type="button" class="slot-toggle" data-slot="'+slot+'"><span>'+(current?current.name:"없음")+'</span><small>열기</small></button>'+
       '<div class="slot-current">현재 기준: <b>'+(current?current.name:"미장착")+'</b></div>'+
       '<div class="rune-menu" id="menu_'+slot+'">'+
-      '<div class="rune-search-wrap"><input class="rune-search" data-slot="'+slot+'" type="search" placeholder="룬 이름/초성 검색" autocomplete="off"></div>'+
+      '<div class="rune-search-wrap"><input class="rune-search" data-slot="'+slot+'" type="search" aria-label="룬 이름 또는 초성 검색" title="룬 이름 또는 초성 검색" autocomplete="off"></div>'+
       '<div class="rune-results" id="results_'+slot+'">'+renderRuneRows(slot)+'</div></div></div>';
   }).join("");
   equipSlots.querySelectorAll(".slot-toggle").forEach(btn=>{
@@ -171,7 +173,7 @@ function renderEquip(){
   bindRuneChoices();
 }
 
-function renderClass(){const on=state.classEnabled.swordsman;swordsmanToggle.textContent=on?"ON":"OFF";swordsmanToggle.className="class-toggle "+(on?"on":"off");swordsmanToggle.onclick=e=>{e.preventDefault();e.stopPropagation();state.classEnabled.swordsman=!state.classEnabled.swordsman;renderAll()};classPassiveList.innerHTML=DB.classes[0].passives.map(p=>`<div class="passive-mini ${on?"":"off"}"><b>${p.name}</b><small>${p.note||""}</small></div>`).join("")}
+function renderClass(){const on=state.classEnabled.swordsman;if(swordsmanToggle){swordsmanToggle.textContent=on?"ON":"OFF";swordsmanToggle.className="class-toggle "+(on?"on":"off");swordsmanToggle.onclick=e=>{e.preventDefault();e.stopPropagation();state.classEnabled.swordsman=!state.classEnabled.swordsman;renderAll();save()}}if(classPassiveList){classPassiveList.innerHTML=DB.classes[0].passives.map(p=>`<div class="passive-mini ${on?"":"off"}"><b>${p.name}</b><small>${p.note||""}</small></div>`).join("")}}
 
 
 function updateDerivedPanel(){
@@ -211,8 +213,12 @@ function renderSettings(){
     abyssKills:"어비스 처치수",
     raidKills:"레이드 처치수",
     unarmoredUptime:"무방비 유지율",
+    nightBlessingUptime:"밤의 축복 유지율",
+    focusUptime:"집중 유지율",
     nightTraceLevel:"밤의 흔적 레벨",
-    galeStacksMax:"질풍태세 최대중첩"
+    galeStacksMax:"질풍태세 최대중첩",
+    ultimateCycleSec:"궁극기 주기",
+    breakExtensionMultiplier:"브익 배율"
   };
   const derived=POB.derivedStats(state);
   settings.innerHTML=`
@@ -262,7 +268,13 @@ function renderSettings(){
   saveBaseline.onclick=()=>{state.baseline=JSON.parse(JSON.stringify(state.selected));renderDashboard();save()}
 }
 
-function renderDashboard(){const cMin=POB.normalizedValue(DB,state,state.selected,"min"),cAvg=POB.normalizedValue(DB,state,state.selected,"avg"),cMax=POB.normalizedValue(DB,state,state.selected,"max");scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / 침식 ${c.preset.erosion} / 용문 ${c.preset.dragon} / 밤축 ${c.preset.night}</small></div>`).join("");const c=cAvg,items=[["공격력",fmt(c.projectedAttack)],["방어력",fmt(c.defense)],["치명",pct(c.critChance)],["치피",pct(c.critDamage)],["추가타",pct(c.extraChance)],["강타",pct(c.strongDamage)],["연타",pct(c.multiDamage)],["적주피",pct(c.enemyDamage)],["무방비",pct(c.unarmored)],["최종피해",pct(c.finalDamage)],["질풍",pct(c.galeDamage)],["스킬계수",pct(c.skillDamage)],["속도보정",pct(c.speedBonus)],["브레이크",pct(c.breakPct)],["피해감소",pct(c.damageReducePct)],["직접DPS",fmt(c.directDps)]];metrics.innerHTML=items.map(([k,v])=>`<div class="metric"><b>${k}</b><span>${v}</span></div>`).join("");const vals=[["공격력",Math.min(100,c.projectedAttack/90000*100)],["치명",c.critChance],["추가타",c.extraChance],["강타",Math.min(100,c.strongDamage)],["연타",Math.min(100,c.multiDamage*2)],["적주피",Math.min(100,c.enemyDamage)],["스킬",Math.min(100,c.skillDamage/3)],["속도",Math.min(100,Math.max(0,c.speedBonus)/3)],["생존",Math.min(100,c.survivalBonus*5)],["직접",Math.min(100,c.directDps/50000*100)]];drawRadar(vals);bars.innerHTML=vals.map(([k,v])=>`<div class="bar-item"><div class="bar-head"><span>${k}</span><span>${pct(v)}</span></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");renderQA()}
+function renderDashboard(){const cMin=POB.normalizedValue(DB,state,state.selected,"min"),cAvg=POB.normalizedValue(DB,state,state.selected,"avg"),cMax=POB.normalizedValue(DB,state,state.selected,"max");scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / 침식 ${c.preset.erosion} / 용문 ${c.preset.dragon} / 밤축 ${c.preset.night}</small></div>`).join("");const c=cAvg,items=[["공격력",fmt(c.projectedAttack)],["방어력",fmt(c.defense)],["치명",pct(c.critChance)],["치피",pct(c.critDamage)],["추가타",pct(c.extraChance)],["강타",pct(c.strongDamage)],["연타",pct(c.multiDamage)],["적주피",pct(c.enemyDamage)],["무방비",pct(c.unarmored)],["최종피해",pct(c.finalDamage)],["질풍",pct(c.galeDamage)],["스킬계수",pct(c.skillDamage)],["속도보정",pct(c.speedBonus)],["브레이크",pct(c.breakPct)],["피해감소",pct(c.damageReducePct)],["직접DPS",fmt(c.directDps)]];metrics.innerHTML=items.map(([k,v])=>`<div class="metric"><b>${k}</b><span>${v}</span></div>`).join("");const vals=[["공격력",Math.min(100,c.projectedAttack/90000*100)],["치명",c.critChance],["추가타",c.extraChance],["강타",Math.min(100,c.strongDamage)],["연타",Math.min(100,c.multiDamage*2)],["적주피",Math.min(100,c.enemyDamage)],["스킬",Math.min(100,c.skillDamage/3)],["속도",Math.min(100,Math.max(0,c.speedBonus)/3)],["생존",Math.min(100,c.survivalBonus*5)],["직접",Math.min(100,c.directDps/50000*100)]];drawRadar(vals);bars.innerHTML=vals.map(([k,v])=>`<div class="bar-item"><div class="bar-head"><span>${k}</span><span>${pct(v)}</span></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");renderQA();renderSkillDamage()}
+function renderSkillDamage(){
+  const panel=document.getElementById("skillDamagePanel");
+  if(!panel||!POB.skillDamageRows)return;
+  const rows=POB.skillDamageRows(DB,state,state.selected,"avg");
+  panel.innerHTML=rows.map(r=>`<div class="skill-card"><div class="skill-head"><div><b>${r.name}</b><small>${r.form||"기본"} · ${r.tags.join(" / ")}</small></div><span>${r.cooldownSec.toFixed(1)}초</span></div><div class="skill-grid"><div><em>노크리</em><strong>${fmt(r.noCrit)}</strong></div><div><em>크리</em><strong>${fmt(r.crit)}</strong></div><div><em>브레이크</em><strong>${fmt(r.breakDamage)}</strong></div><div><em>브레이크 익스텐션</em><strong>${fmt(r.breakExtension)}</strong></div></div><p>1분 노크리 기준 ${fmt(r.damagePerMinute)} · 툴팁 피해 기반</p></div>`).join("");
+}
 function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2+8,R=118,N=vals.length;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#334155";ctx.lineWidth=1;for(let ring=1;ring<=4;ring++){ctx.beginPath();for(let i=0;i<N;i++){const a=-Math.PI/2+i*2*Math.PI/N,r=R*ring/4,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}vals.forEach(([label],i)=>{const a=-Math.PI/2+i*2*Math.PI/N;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();ctx.fillStyle="#dbe4ee";ctx.font="13px system-ui";ctx.textAlign=Math.cos(a)>.2?"left":Math.cos(a)<-.2?"right":"center";ctx.fillText(label,cx+Math.cos(a)*(R+26),cy+Math.sin(a)*(R+26))});ctx.beginPath();vals.forEach(([_,v],i)=>{const a=-Math.PI/2+i*2*Math.PI/N,r=R*Math.max(0,Math.min(100,v))/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.closePath();ctx.fillStyle="rgba(255,106,24,.35)";ctx.strokeStyle="#ff6a18";ctx.lineWidth=3;ctx.fill();ctx.stroke()}
 function renderRank(){document.querySelectorAll(".rank-tab").forEach(b=>{b.classList.toggle("active",b.dataset.rank===state.rankSlot);b.onclick=()=>{state.rankSlot=b.dataset.rank;renderRank()}});const slot=state.rankSlot,cat=POB.SLOT_CAT[slot];ranking.innerHTML=(DB.runes[cat]||[]).map(r=>{const sel={...state.selected,[slot]:r.id};const nv=POB.normalizedValue(DB,state,sel,"avg");return{r,diff:nv.diffPct,value:nv.valueScore}}).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · ${x.value.toFixed(2)}점</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("")}
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}

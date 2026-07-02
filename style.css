@@ -136,3 +136,32 @@ body{overflow-x:hidden}
 .rune-empty{padding:12px;color:#9aa8ba;font-weight:800;text-align:center}
 
 .brand{min-width:240px}.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.auth-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.auth-form input{width:112px;background:#10151d;color:#eef4ff;border:1px solid #354052;border-radius:10px;padding:9px 10px;font-weight:800}.auth-form input:focus{outline:none;border-color:#ff6a18;box-shadow:0 0 0 2px rgba(255,106,24,.18)}.auth-form span{color:#9ca8b7;font-weight:900;min-width:86px;text-align:right}.auth-form button,#resetBtn{white-space:nowrap}@media(max-width:760px){header{align-items:flex-start}.header-actions{justify-content:flex-start}.auth-form{width:100%}.auth-form input{flex:1 1 120px}.auth-form span{text-align:left}}
+
+
+/* v0.0004 skill damage panel */
+.skill-damage{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.skill-card{background:#10151d;border:1px solid #303947;border-radius:14px;padding:12px;min-width:0}
+.skill-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
+.skill-head b{display:block;color:#fff;font-size:17px}
+.skill-head small{display:block;color:#9ca8b7;margin-top:3px;line-height:1.35}
+.skill-head span{color:#ffd24a;font-weight:1000;white-space:nowrap}
+.skill-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.skill-grid div{background:#151b24;border:1px solid #303947;border-radius:10px;padding:9px;min-width:0}
+.skill-grid em{display:block;color:#a8b3c2;font-style:normal;font-size:12px;font-weight:900;line-height:1.25}
+.skill-grid strong{display:block;margin-top:4px;font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.skill-card p{font-size:12px;margin:9px 0 0;color:#9ca8b7}
+@media(max-width:420px){.skill-grid{grid-template-columns:1fr}.skill-head{flex-direction:column}.skill-head span{white-space:normal}}
+
+
+/* v0.0005 collapsible category panels and skill passive control */
+.collapsible-panel{padding:0;overflow:hidden}
+.collapsible-panel>.panel-summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;cursor:pointer;color:#ff7a2a;font-size:24px;font-weight:1000}
+.collapsible-panel>.panel-summary::-webkit-details-marker{display:none}
+.collapsible-panel>.panel-summary::after{content:"접기";font-size:12px;color:#9ca8b7;background:#303846;border-radius:999px;padding:5px 9px;white-space:nowrap}
+.collapsible-panel:not([open])>.panel-summary::after{content:"열기"}
+.collapsible-panel>*:not(summary){margin-left:16px;margin-right:16px}
+.collapsible-panel>*:last-child{margin-bottom:16px}
+.skill-panel-summary .class-toggle{margin-left:auto}
+.skill-panel-summary::after{margin-left:0}
+.skill-passive-list{margin-bottom:12px}
+@media(max-width:760px){.collapsible-panel>.panel-summary{font-size:20px}.skill-panel-summary{flex-wrap:wrap}.skill-panel-summary .class-toggle{margin-left:0}}

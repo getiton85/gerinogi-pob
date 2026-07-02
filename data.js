@@ -1,5 +1,5 @@
 const DB = {
-  "version": "27.8-profile-search-v0.0002",
+  "version": "0.0004-formula-v2-skill-damage",
   "classes": [
     {
       "id": "swordsman",
@@ -93,6 +93,19 @@ const DB = {
       ]
     }
   ],
+  "skills": {
+    "swordsman": [
+      {"id":"steel_spike","name":"강철 쐐기","form":"기본","tags":["스킬","강타"],"damage":11700,"cooldownSec":4,"rangeM":1.65,"note":"비검/쾌검 연계 기초 스킬","source":"user_screenshot_2026_07_03"},
+      {"id":"steel_spike_piercing","name":"강철 쐐기","form":"관통의 각인","tags":["스킬","강타","광역"],"damage":13325,"cooldownSec":4,"rangeM":1.65,"areaM":3,"note":"범위 피해를 주는 쾌검 연계 변화형","source":"user_screenshot_2026_07_03"},
+      {"id":"scabbard_strike","name":"칼집 치기","form":"기본","tags":["스킬","강타","브레이크"],"damageParts":[{"label":"1타","damage":4550},{"label":"2타","damage":13650}],"cooldownSec":12,"breakGauge":1,"rangeM":1.65,"source":"user_screenshot_2026_07_03"},
+      {"id":"gale_slash","name":"질풍 베기","form":"기본","tags":["스킬","연타"],"damageParts":[{"label":"연타","damage":4680,"hits":5}],"cooldownSec":10,"focusCooldownSec":5,"rangeM":1.65,"source":"user_screenshot_2026_07_03"},
+      {"id":"flying_sword_steel","name":"비검: 강철 쐐기","form":"관통의 각인","tags":["스킬","비검","강타","광역"],"damage":33955,"cooldownSec":10,"focusGain":30,"rangeM":4,"areaM":4,"source":"user_screenshot_2026_07_03"},
+      {"id":"flying_sword_scabbard","name":"비검: 칼집 치기","form":"칼집 연계","tags":["스킬","비검","강타","브레이크","광역"],"damageParts":[{"label":"1타","damage":12612},{"label":"2타","damage":37836}],"cooldownSec":10,"breakGauge":1,"rangeM":4,"areaM":4,"source":"user_screenshot_2026_07_03"},
+      {"id":"flying_sword_gale","name":"비검: 질풍 베기","form":"질풍 연계","tags":["스킬","비검","연타","광역"],"damageParts":[{"label":"연타","damage":6985,"hits":5},{"label":"마무리","damage":34925}],"cooldownSec":10,"rangeM":4,"areaM":4,"source":"user_screenshot_2026_07_03"},
+      {"id":"ganpa","name":"간파","form":"일섬의 각인","tags":["스킬","광역"],"damage":69851,"cooldownSec":18,"focusGain":35,"rangeM":12,"areaM":6,"note":"밤의 축복 발동 트리거. 밤의 축복 기본 유지율은 15/60=25%로 계산한다.","source":"user_screenshot_2026_07_03"},
+      {"id":"ultimate_flash","name":"일섬","form":"궁극기","tags":["스킬","궁극기","광역"],"damage":194032,"ultimateCost":300,"cooldownSec":75,"rangeM":10,"areaM":15,"note":"사용자 체감 60~90초 주기. 기본값은 75초.","source":"user_screenshot_2026_07_03"}
+    ]
+  },
   "runes": {
     "emblem": [
       {

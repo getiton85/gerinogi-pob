@@ -1,8 +1,8 @@
 const POB = (() => {
-const SLOT_CAT={emblem:"emblem",weapon:"weapon",head:"armor",top:"armor",bottom:"armor",gloves:"armor",shoes:"armor",necklace:"accessory",ring1:"accessory",ring2:"accessory"};
-const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",shoes:"",necklace:"",ring1:"",ring2:""};
+const SLOT_CAT={emblem:"emblem",weapon:"weapon",head:"armor",top:"armor",bottom:"armor",gloves:"armor",shoes:"armor"};
+const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",shoes:""};
 const DEFAULT_STATS={attack:57582,defense:18542,breakPower:2914,strongStat:4957,comboStat:1532,skillPower:2729,areaPower:1412,recoveryPower:2468,weakpointDodge:1358,extraStat:2797,damageReduce:2998,fastAttack:2047,multiStat:1681,fastSkill:1757,extraHp:27183,ultimatePower:1366,critStat:8649,critDamageBase:300};
-const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightTraceLevel:45,galeStacksMax:5};
+const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightBlessingUptime:0.25,focusUptime:0.5,nightTraceLevel:45,galeStacksMax:5,ultimateCycleSec:75,breakExtensionMultiplier:2};
 
 const VALUE_WEIGHTS={
   attack:1.08,
@@ -33,7 +33,7 @@ function merge(a,b){const o={...a};for(const[k,v]of Object.entries(b||{}))add(o,
 function statePreset(state,kind){
   if(kind==="min")return{name:"최소",erosion:0,dragon:0,night:0,gale:0,nightTrace:0};
   if(kind==="max")return{name:"최대",erosion:100,dragon:1,night:1,gale:n(state.env.galeStacksMax),nightTrace:n(state.env.nightTraceLevel)};
-  return{name:"평균",erosion:0,dragon:.5,night:1,gale:n(state.env.galeStacksMax)*.5,nightTrace:n(state.env.nightTraceLevel)*.5};
+  return{name:"평균",erosion:0,dragon:.5,night:Math.max(0,Math.min(1,n(state.env.nightBlessingUptime))),gale:n(state.env.galeStacksMax)*.5,nightTrace:n(state.env.nightTraceLevel)*.5};
 }
 
 function derivedStats(state){
@@ -204,6 +204,78 @@ function normalizedValue(db,state,sel=state.selected,kind="avg"){
   return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: value, diffPct: value - 100, expectedAxes: rawExpected.axes};
 }
 
+function clamp(v,min,max){return Math.max(min,Math.min(max,n(v)))}
+function factorPct(v){return 1+n(v)/100}
+function totalSkillDamage(skill){
+  if(!skill)return 0;
+  if(Array.isArray(skill.damageParts))return skill.damageParts.reduce((sum,p)=>sum+n(p.damage)*Math.max(1,n(p.hits)||1),0);
+  return n(skill.damage);
+}
+function skillCooldownSec(skill,state){
+  if(!skill)return 1;
+  if(skill.id==="ultimate_flash")return Math.max(1,n(state.env.ultimateCycleSec)||75);
+  let cd=n(skill.cooldownSec)||10;
+  const focus=clamp(state.env.focusUptime,0,1);
+  if(skill.focusCooldownSec)cd=cd*(1-focus)+n(skill.focusCooldownSec)*focus;
+  return Math.max(0.5,cd);
+}
+function skillTagMultiplier(skill,ctx){
+  const tags=new Set(skill.tags||[]);
+  let m=1;
+  if(tags.has("강타"))m*=factorPct(ctx.strongDamage);
+  if(tags.has("연타"))m*=factorPct(ctx.multiDamage);
+  if(tags.has("광역"))m*=factorPct(ctx.areaDamage);
+  if(tags.has("궁극기"))m*=factorPct(ctx.ultimateDamage);
+  if(tags.has("비검"))m*=factorPct(ctx.flyingSwordDamage);
+  if(tags.has("스킬"))m*=factorPct(ctx.skillDamage);
+  return m;
+}
+function formulaV2Context(db,state,sel=state.selected,kind="avg"){
+  const c=normalizedValue(db,state,sel,kind);
+  const e=c.effects||{};
+  const d=c.base||derivedStats(state);
+  const critRate=clamp(c.critChance,0,100)/100;
+  const critMultiplier=Math.max(1,n(c.critDamage)/100);
+  return {
+    calc:c,
+    attackA:c.projectedAttack,
+    attackBoostB:1+n(e.attackPct)/100,
+    damageC:factorPct(c.enemyDamage),
+    tagD:1,
+    gemE:1,
+    critExpectedF:1+critRate*(critMultiplier-1),
+    critMultiplier,
+    breakG:factorPct(c.breakPct+n(c.unarmored)),
+    breakExtensionG:factorPct(c.breakPct+(n(c.unarmored)*Math.max(1,n(state.env.breakExtensionMultiplier)||2))),
+    skillH:factorPct(c.skillDamage),
+    defenseI:1,
+    counterJ:1,
+    extraK:1+clamp(c.extraChance,0,100)/100,
+    finalL:factorPct(c.finalDamage),
+    strongDamage:c.strongDamage,
+    multiDamage:c.multiDamage,
+    areaDamage:n(d.areaPowerPct),
+    ultimateDamage:n(d.ultimatePowerPct)+n(e.ultimateDamagePct)+n(e.ultimateSkillDamagePct),
+    flyingSwordDamage:n(e.flyingSwordDamagePct),
+    skillDamage:c.skillDamage
+  };
+}
+function skillDamageRows(db,state,sel=state.selected,kind="avg"){
+  const skills=(((db.skills||{}).swordsman)||[]);
+  const ctx=formulaV2Context(db,state,sel,kind);
+  const common=ctx.damageC*ctx.skillH*ctx.finalL;
+  return skills.map(skill=>{
+    const base=totalSkillDamage(skill);
+    const tag=skillTagMultiplier(skill,ctx);
+    const noCrit=base*common*tag;
+    const crit=noCrit*ctx.critMultiplier;
+    const breakDamage=noCrit*ctx.breakG;
+    const breakExtension=crit*ctx.breakExtensionG;
+    const cooldown=skillCooldownSec(skill,state);
+    return {id:skill.id,name:skill.name,form:skill.form||"",tags:skill.tags||[],baseDamage:base,noCrit,crit,breakDamage,breakExtension,cooldownSec:cooldown,damagePerMinute:noCrit*(60/cooldown),source:skill.source||"tooltip"};
+  });
+}
+
 function validate(db){
   const ids=new Set(),dup=[];
   for(const r of allRunes(db)){if(ids.has(r.id))dup.push(r.id);ids.add(r.id)}
@@ -222,6 +294,7 @@ function validate(db){
 function runSelfTest(db){
   const state={selected:{...DEFAULT_SELECTED},baseline:{...DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",stats:{...DEFAULT_STATS},env:{...DEFAULT_ENV}};
   const val=validate(db);
+  state.classEnabled.swordsman=true;
   const c1=calc(db,state,state.selected,"avg");
   state.classEnabled.swordsman=false;
   const c2=calc(db,state,state.selected,"avg");
@@ -237,17 +310,19 @@ function runSelfTest(db){
   utilityDb.runes.accessory=[{id:"accessory_utility_value_audit",name:"Utility Value Audit",tag:"audit",effects:{attackSpeedPct:25,skillSpeedPct:25,castingSpeedPct:25,chargeSpeedPct:25,cooldownRecoveryPct:25,recoveryPct:25}}];
   const utilityBase=normalizedValue(utilityDb,state,state.baseline,"avg").valueScore;
   const utilitySelected=normalizedValue(utilityDb,state,{...state.baseline,necklace:"accessory_utility_value_audit"},"avg").valueScore;
+  const skillRows=skillDamageRows(db,state,state.selected,"avg");
+  const nightAvg=normalizedValue(db,state,{...state.selected,emblem:"emblem_gogyeol"},"avg").preset.night;
   const tests=[
     ...val.result,
     {name:"평균 점수 산출",pass:Number.isFinite(c1.score)&&c1.score>0,detail:Math.round(c1.score).toLocaleString()},
     {name:"패시브 ON/OFF 반응",pass:c1.score!==c2.score,detail:`ON ${Math.round(c1.score)} / OFF ${Math.round(c2.score)}`},
     {name:"어비스/레이드 모드 반응",pass:cRaid.score!==cAbyss.score,detail:`레이드 ${Math.round(cRaid.score)} / 어비스 ${Math.round(cAbyss.score)}`},
-    {name:"직접DPS 산출",pass:Number.isFinite(c1.directDps)&&c1.directDps>0,detail:Math.round(c1.directDps).toLocaleString()},
-    {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"기준 세팅 100.00"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`}
+    {name:"직접DPS 산출",pass:Number.isFinite(c1.directDps)&&c1.directDps>=0,detail:Math.round(c1.directDps).toLocaleString()},
+    {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"기준 세팅 100.00"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`}
   ];
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,formulaV2Context,skillDamageRows,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

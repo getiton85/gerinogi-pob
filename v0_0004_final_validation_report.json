@@ -1,0 +1,94 @@
+{
+  "pass": false,
+  "checks": {
+    "selfTest": true,
+    "noAppBannedWords": true,
+    "version": true,
+    "skillPanel": true,
+    "reset": false,
+    "none": false,
+    "search": false,
+    "emptyScore100": true,
+    "night25": true,
+    "skillRows": true
+  },
+  "bannedApp": [],
+  "failedSelf": [],
+  "skillCount": 9,
+  "emptyScore": 100,
+  "version": "v0.0004",
+  "samples": [
+    {
+      "name": "강철 쐐기",
+      "form": "기본",
+      "base": 11700,
+      "noCrit": 78313,
+      "crit": 289757,
+      "cooldown": 4
+    },
+    {
+      "name": "강철 쐐기",
+      "form": "관통의 각인",
+      "base": 13325,
+      "noCrit": 95879,
+      "crit": 354751,
+      "cooldown": 4
+    },
+    {
+      "name": "칼집 치기",
+      "form": "기본",
+      "base": 18200,
+      "noCrit": 121820,
+      "crit": 450733,
+      "cooldown": 12
+    },
+    {
+      "name": "질풍 베기",
+      "form": "기본",
+      "base": 23400,
+      "noCrit": 131396,
+      "crit": 486166,
+      "cooldown": 7.5
+    },
+    {
+      "name": "비검: 강철 쐐기",
+      "form": "관통의 각인",
+      "base": 33955,
+      "noCrit": 305400,
+      "crit": 1129979,
+      "cooldown": 10
+    },
+    {
+      "name": "비검: 칼집 치기",
+      "form": "칼집 연계",
+      "base": 50448,
+      "noCrit": 453742,
+      "crit": 1678846,
+      "cooldown": 10
+    },
+    {
+      "name": "비검: 질풍 베기",
+      "form": "질풍 연계",
+      "base": 69850,
+      "noCrit": 527050,
+      "crit": 1950085,
+      "cooldown": 10
+    },
+    {
+      "name": "간파",
+      "form": "일섬의 각인",
+      "base": 69851,
+      "noCrit": 366524,
+      "crit": 1356139,
+      "cooldown": 18
+    },
+    {
+      "name": "일섬",
+      "form": "궁극기",
+      "base": 194032,
+      "noCrit": 1028311,
+      "crit": 3804751,
+      "cooldown": 75
+    }
+  ]
+}

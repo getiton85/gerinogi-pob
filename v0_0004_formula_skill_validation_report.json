@@ -1,0 +1,108 @@
+{
+  "selfPass": true,
+  "failed": [],
+  "testCount": 15,
+  "version": {
+    "version": "0.0004",
+    "display": "v0.0004",
+    "rule": "Every released code/data/UI change must bump this version and update index cache-buster query strings.",
+    "updatedAt": "2026-07-03T00:00:00+09:00",
+    "note": "Add formula v2 context and swordsman skill damage preview."
+  },
+  "skillCount": 9,
+  "emptyScore": 100,
+  "nightUptime": 0.25,
+  "checks": {
+    "hasSearchInput": true,
+    "hasNoneOption": true,
+    "resetFreshState": true,
+    "skillPanel": true,
+    "version": true
+  },
+  "banned": [
+    "placeholder"
+  ],
+  "samples": {
+    "강철 쐐기 기본": {
+      "base": 11700,
+      "noCrit": 78313,
+      "crit": 289757,
+      "breakDamage": 80975,
+      "breakExtension": 299609,
+      "cooldown": 4,
+      "dpm": 1174691
+    },
+    "강철 쐐기 관통의 각인": {
+      "base": 13325,
+      "noCrit": 95879,
+      "crit": 354751,
+      "breakDamage": 99139,
+      "breakExtension": 366813,
+      "cooldown": 4,
+      "dpm": 1438181
+    },
+    "칼집 치기 기본": {
+      "base": 18200,
+      "noCrit": 121820,
+      "crit": 450733,
+      "breakDamage": 125962,
+      "breakExtension": 466058,
+      "cooldown": 12,
+      "dpm": 609099
+    },
+    "질풍 베기 기본": {
+      "base": 23400,
+      "noCrit": 131396,
+      "crit": 486166,
+      "breakDamage": 135864,
+      "breakExtension": 502696,
+      "cooldown": 7.5,
+      "dpm": 1051170
+    },
+    "비검: 강철 쐐기 관통의 각인": {
+      "base": 33955,
+      "noCrit": 305400,
+      "crit": 1129979,
+      "breakDamage": 315783,
+      "breakExtension": 1168399,
+      "cooldown": 10,
+      "dpm": 1832399
+    },
+    "비검: 칼집 치기 칼집 연계": {
+      "base": 50448,
+      "noCrit": 453742,
+      "crit": 1678846,
+      "breakDamage": 469169,
+      "breakExtension": 1735926,
+      "cooldown": 10,
+      "dpm": 2722452
+    },
+    "비검: 질풍 베기 질풍 연계": {
+      "base": 69850,
+      "noCrit": 527050,
+      "crit": 1950085,
+      "breakDamage": 544970,
+      "breakExtension": 2016388,
+      "cooldown": 10,
+      "dpm": 3162300
+    },
+    "간파 일섬의 각인": {
+      "base": 69851,
+      "noCrit": 366524,
+      "crit": 1356139,
+      "breakDamage": 378986,
+      "breakExtension": 1402247,
+      "cooldown": 18,
+      "dpm": 1221746
+    },
+    "일섬 궁극기": {
+      "base": 194032,
+      "noCrit": 1028311,
+      "crit": 3804751,
+      "breakDamage": 1063274,
+      "breakExtension": 3934112,
+      "cooldown": 75,
+      "dpm": 822649
+    }
+  }
+}

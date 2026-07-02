@@ -1,0 +1,30 @@
+{
+  "version": "v0.0005",
+  "generatedAt": "2026-07-02T19:00:10.540Z",
+  "outputPath": "C:/Users/freem/Documents/Codex/2026-07-02/project-md-pob-1-db-2/outputs/gerinogi_pob_ui_v0_0005",
+  "checks": {
+    "1 기능 구현": "PASS - 장신구 공용 슬롯 제거, 카테고리 접기, 검술사 패시브 토글 스킬 패널 이동 적용",
+    "2 체크리스트 검수": "PASS - 기존 대시보드/룬 추천/검색/없음/초기화 구조 유지 확인",
+    "3 숫자 대조": "PASS - 패시브 OFF 첫 스킬 노크리 15,459, ON 78,313으로 계산 반응 확인",
+    "4 역검증": "PASS - 장신구 슬롯 제거 후 저장 데이터 sanitizeSelection으로 잔여 necklace/ring 키 차단",
+    "5 UI 검수": "PASS - 브라우저에서 v0.0005, 6개 접기 패널, 9개 스킬 카드 표시 확인",
+    "6 연결 검수": "PASS - 패시브 버튼이 검술사 스킬 예상 데미지 summary 안에 연결됨",
+    "7 회귀 테스트": "PASS - QA 항목 15개, 실패 0개 확인"
+  },
+  "browserCheck": {
+    "title": "게리롱 멋대로 POB식 밸류",
+    "version": "v0.0005",
+    "slotLabels": [
+      "엠블럼",
+      "무기",
+      "머리",
+      "상의",
+      "하의",
+      "장갑",
+      "신발"
+    ],
+    "skillCards": 9,
+    "qaFailCount": 0
+  },
+  "note": "GitHub 저장소에는 아직 자동 업로드하지 않았음. 후보 결과물은 outputs 폴더에서 직접 확인 가능."
+}

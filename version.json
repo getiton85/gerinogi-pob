@@ -1,7 +1,5 @@
 {
-  "version": "0.0003",
-  "display": "v0.0003",
-  "rule": "Every released code/data/UI change must bump this version and update index cache-buster query strings.",
-  "updatedAt": "2026-07-03T00:00:00+09:00",
-  "note": "Force GitHub Pages redeploy because v0.0002 raw files were updated but Pages served an older artifact."
+  "version": "0.0005",
+  "display": "v0.0005",
+  "note": "직업별 장신구 전환을 위한 공용 장신구 슬롯 제거, 카테고리 접기, 검술사 패시브 토글 스킬 패널 이동"
 }

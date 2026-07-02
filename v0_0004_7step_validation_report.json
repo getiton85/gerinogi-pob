@@ -1,0 +1,54 @@
+{
+  "pass": true,
+  "checks": {
+    "feature": true,
+    "checklist": true,
+    "number": true,
+    "inverse": true,
+    "ui": true,
+    "connection": true,
+    "regression": true
+  },
+  "failedSelf": [],
+  "bannedApp": [],
+  "skillCount": 9,
+  "version": "v0.0004",
+  "nightUptime": 0.25,
+  "representative": {
+    "steel": {
+      "id": "steel_spike",
+      "name": "강철 쐐기",
+      "form": "기본",
+      "tags": [
+        "스킬",
+        "강타"
+      ],
+      "baseDamage": 11700,
+      "noCrit": 78312.74686622623,
+      "crit": 289757.163405037,
+      "breakDamage": 80975.38025967791,
+      "breakExtension": 299608.90696080826,
+      "cooldownSec": 4,
+      "damagePerMinute": 1174691.2029933934,
+      "source": "user_screenshot_2026_07_03"
+    },
+    "ultimate": {
+      "id": "ultimate_flash",
+      "name": "일섬",
+      "form": "궁극기",
+      "tags": [
+        "스킬",
+        "궁극기",
+        "광역"
+      ],
+      "baseDamage": 194032,
+      "noCrit": 1028310.9547981601,
+      "crit": 3804750.532753193,
+      "breakDamage": 1063273.5272612977,
+      "breakExtension": 3934112.0508668013,
+      "cooldownSec": 75,
+      "damagePerMinute": 822648.7638385282,
+      "source": "user_screenshot_2026_07_03"
+    }
+  }
+}

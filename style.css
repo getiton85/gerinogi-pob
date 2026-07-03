@@ -165,3 +165,15 @@ body{overflow-x:hidden}
 .skill-panel-summary::after{margin-left:0}
 .skill-passive-list{margin-bottom:12px}
 @media(max-width:760px){.collapsible-panel>.panel-summary{font-size:20px}.skill-panel-summary{flex-wrap:wrap}.skill-panel-summary .class-toggle{margin-left:0}}
+
+
+/* v0.0006 environment panel alignment and gem setting */
+#settings>.input-group.env-group{flex:2 1 360px}
+#settings>.input-group.env-group>.env-grid{grid-template-columns:repeat(auto-fit,minmax(92px,1fr));align-items:stretch}
+.env-grid label{display:grid;grid-template-rows:minmax(34px,auto) 38px;align-content:end;min-height:82px}
+.env-grid input,.env-grid select{width:100%;min-width:0;height:38px;background:#10151d;color:#fff;border:1px solid #354052;border-radius:10px;padding:7px 8px;text-align:center;font-weight:900;font-variant-numeric:tabular-nums}
+.env-grid select{text-align-last:center;appearance:auto}
+.env-grid .gem-field{grid-column:1/-1;grid-template-rows:auto 40px auto;background:#151b24;border:1px solid #303947;border-radius:12px;padding:10px;min-height:0}
+.env-grid .gem-field small{display:block;color:#9ca8b7;font-size:12px;line-height:1.25;margin-top:6px;font-weight:800}
+@media(max-width:760px){#settings>.input-group.env-group>.env-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.env-grid .gem-field{grid-column:1/-1}}
+@media(max-width:420px){#settings>.input-group.env-group>.env-grid{grid-template-columns:1fr}}

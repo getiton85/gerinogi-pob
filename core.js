@@ -2,7 +2,7 @@ const POB = (() => {
 const SLOT_CAT={emblem:"emblem",weapon:"weapon",head:"armor",top:"armor",bottom:"armor",gloves:"armor",shoes:"armor"};
 const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",shoes:""};
 const DEFAULT_STATS={attack:57582,defense:18542,breakPower:2914,strongStat:4957,comboStat:1532,skillPower:2729,areaPower:1412,recoveryPower:2468,weakpointDodge:1358,extraStat:2797,damageReduce:2998,fastAttack:2047,multiStat:1681,fastSkill:1757,extraHp:27183,ultimatePower:1366,critStat:8649,critDamageBase:300};
-const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightBlessingUptime:0.25,focusUptime:0.5,nightTraceLevel:45,galeStacksMax:5,ultimateCycleSec:75,breakExtensionMultiplier:2};
+const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightBlessingUptime:0.25,focusUptime:0.5,nightTraceLevel:45,galeStacksMax:5,ultimateCycleSec:75,breakExtensionMultiplier:2,gemLines:0};
 
 const VALUE_WEIGHTS={
   attack:1.08,
@@ -113,6 +113,7 @@ function calc(db,state,sel=state.selected,kind="avg"){
 
   const enemyDamage=n(effects.enemyDamagePct)+n(effects.targetIncomingDamageIncreasePct)+n(effects.damagePct);
   const unarmored=n(effects.unarmoredDamagePct)*n(state.env.unarmoredUptime);
+  const gemDamage=gemDamagePct(state);
   const finalDamage=n(effects.finalDamagePct);
   const galeDamage=n(effects.galePostureDamagePct);
   const skillDamage=n(effects.skillDamagePct)+n(effects.ultimateSkillDamagePct)+n(effects.castingSkillDamagePct)+n(effects.chargeSkillDamagePct)+n(effects.channelingSkillDamagePct)+n(effects.breakSkillDamagePct)+n(effects.resourceConsumingSkillDamagePct)+n(effects.activeSlot3SkillDamagePct);
@@ -120,7 +121,7 @@ function calc(db,state,sel=state.selected,kind="avg"){
   const utilityBonus=n(base.breakPct)*0.03+n(base.comboPct)*0.02+n(base.skillPowerPct)*0.04+n(base.areaPowerPct)*0.02+n(base.ultimatePowerPct)*0.03;
   const survivalBonus=n(base.damageReducePct)*0.015+n(base.extraHpPct)*0.01+n(base.weakpointDodgePct)*0.01;
 
-  const amp=(1+enemyDamage/100)*(1+unarmored/100)*(1+finalDamage/100)*(1+galeDamage/100)*(1+skillDamage/300)*(1+utilityBonus/100)*(1+survivalBonus/100);
+  const amp=(1+enemyDamage/100)*(1+unarmored/100)*(1+gemDamage/100)*(1+finalDamage/100)*(1+galeDamage/100)*(1+skillDamage/300)*(1+utilityBonus/100)*(1+survivalBonus/100);
   const critEV=1+((critChance*VALUE_WEIGHTS.critChance)/100)*((critDamage*VALUE_WEIGHTS.critDamage)/100-1);
   const extraEV=1+((extraChance*VALUE_WEIGHTS.extraChance)/100)*0.55;
   const strongEV=1+(strongDamage/100)*0.35;
@@ -130,7 +131,7 @@ function calc(db,state,sel=state.selected,kind="avg"){
   return {
     preset,effects,base,projectedAttack,defense,
     critChance,extraChance,critDamage,strongDamage,multiDamage,
-    enemyDamage,unarmored,finalDamage,galeDamage,skillDamage,speedBonus,
+    enemyDamage,unarmored,finalDamage,galeDamage,skillDamage,speedBonus,gemDamagePct:gemDamage,
     breakPct:base.breakPct,comboPct:base.comboPct,skillPowerPct:base.skillPowerPct,areaPowerPct:base.areaPowerPct,
     recoveryPct:base.recoveryPct,weakpointDodgePct:base.weakpointDodgePct,damageReducePct:base.damageReducePct,
     fastAttackPct:base.fastAttackPct,fastSkillPct:base.fastSkillPct,extraHpPct:base.extraHpPct,ultimatePowerPct:base.ultimatePowerPct,
@@ -171,7 +172,7 @@ function expectedDamageScore(db,state,sel=state.selected,kind="avg"){
     n(d.breakPct)*0.35+n(d.skillPowerPct)*0.75+n(d.areaPowerPct)*0.30+
     n(d.ultimatePowerPct)*0.25;
 
-  const damageAxis=(1+generalPct/100)*(1+tagPct/100)*(1+utilityPct/100);
+  const damageAxis=(1+generalPct/100)*(1+gemDamagePct(state)/100)*(1+tagPct/100)*(1+utilityPct/100);
 
   const critChance=Math.min(100,Math.max(0,n(c.critChance)));
   const critDamage=Math.max(100,n(c.critDamage)||300);
@@ -205,6 +206,7 @@ function normalizedValue(db,state,sel=state.selected,kind="avg"){
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,n(v)))}
+function gemDamagePct(state){return clamp(state&&state.env?state.env.gemLines:0,0,3)*22*2.2}
 function factorPct(v){return 1+n(v)/100}
 function totalSkillDamage(skill){
   if(!skill)return 0;
@@ -242,7 +244,7 @@ function formulaV2Context(db,state,sel=state.selected,kind="avg"){
     attackBoostB:1+n(e.attackPct)/100,
     damageC:factorPct(c.enemyDamage),
     tagD:1,
-    gemE:1,
+    gemE:factorPct(c.gemDamagePct),
     critExpectedF:1+critRate*(critMultiplier-1),
     critMultiplier,
     breakG:factorPct(c.breakPct+n(c.unarmored)),
@@ -263,7 +265,7 @@ function formulaV2Context(db,state,sel=state.selected,kind="avg"){
 function skillDamageRows(db,state,sel=state.selected,kind="avg"){
   const skills=(((db.skills||{}).swordsman)||[]);
   const ctx=formulaV2Context(db,state,sel,kind);
-  const common=ctx.damageC*ctx.skillH*ctx.finalL;
+  const common=ctx.damageC*ctx.gemE*ctx.skillH*ctx.finalL;
   return skills.map(skill=>{
     const base=totalSkillDamage(skill);
     const tag=skillTagMultiplier(skill,ctx);
@@ -323,6 +325,6 @@ function runSelfTest(db){
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,formulaV2Context,skillDamageRows,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,formulaV2Context,skillDamageRows,gemDamagePct,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

@@ -37,7 +37,7 @@ function save(){
     localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
   }
 }
-function n(v){return Number(v)||0} function pct(v){return (Math.round(v*10)/10)+"%"} function plusPct(v){const x=Math.round(v*10)/10;return (x>=0?"+":"")+x+"%"} function fmt(v){return Math.round(v).toLocaleString()}
+function n(v){return Number(v)||0} function pct(v){return (Math.round(v*10)/10)+"%"} function plusPct(v){const x=Math.round(v*10)/10;return (x>=0?"+":"")+x+"%"} function fmt(v){return Math.round(v).toLocaleString()} function gemPct(lines){return Math.round((n(lines)*22*2.2)*10)/10}
 
 
 const authForm=document.getElementById("authForm");
@@ -220,6 +220,8 @@ function renderSettings(){
     ultimateCycleSec:"궁극기 주기",
     breakExtensionMultiplier:"브익 배율"
   };
+  const gemLines=n(state.env.gemLines);
+  const gemOptions=[0,1,2,3].map(v=>`<option value="${v}" ${gemLines===v?"selected":""}>${v===0?"미적용":`${v}줄작 · +${gemPct(v)}%`}</option>`).join("");
   const derived=POB.derivedStats(state);
   settings.innerHTML=`
     <details class="input-group" open>
@@ -250,9 +252,10 @@ function renderSettings(){
         <div><b>치명피해</b><span>${pct(state.stats.critDamageBase)}</span></div>
       </div>
     </details>
-    <details class="input-group" open>
+    <details class="input-group env-group" open>
       <summary>상태/환경 입력</summary>
-      <div class="form-grid">
+      <div class="form-grid env-grid">
+        <label class="gem-field">보석<input type="hidden" value="${gemLines}"><select data-env-choice="gemLines">${gemOptions}</select><small>22개 보석 기준 · 한 줄당 48.4%</small></label>
         ${Object.entries(envLabels).map(([k,l])=>`<label>${l}<input data-env="${k}" type="text" inputmode="decimal" value="${state.env[k]}"></label>`).join("")}
       </div>
     </details>
@@ -265,10 +268,14 @@ function renderSettings(){
     state.env[e.target.dataset.env]=n(e.target.value);
     renderDashboard();renderRank();updateDerivedPanel();save();
   });
+  settings.querySelectorAll("[data-env-choice]").forEach(i=>i.onchange=e=>{
+    state.env[e.target.dataset.envChoice]=n(e.target.value);
+    renderDashboard();renderRank();updateDerivedPanel();save();
+  });
   saveBaseline.onclick=()=>{state.baseline=JSON.parse(JSON.stringify(state.selected));renderDashboard();save()}
 }
 
-function renderDashboard(){const cMin=POB.normalizedValue(DB,state,state.selected,"min"),cAvg=POB.normalizedValue(DB,state,state.selected,"avg"),cMax=POB.normalizedValue(DB,state,state.selected,"max");scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / 침식 ${c.preset.erosion} / 용문 ${c.preset.dragon} / 밤축 ${c.preset.night}</small></div>`).join("");const c=cAvg,items=[["공격력",fmt(c.projectedAttack)],["방어력",fmt(c.defense)],["치명",pct(c.critChance)],["치피",pct(c.critDamage)],["추가타",pct(c.extraChance)],["강타",pct(c.strongDamage)],["연타",pct(c.multiDamage)],["적주피",pct(c.enemyDamage)],["무방비",pct(c.unarmored)],["최종피해",pct(c.finalDamage)],["질풍",pct(c.galeDamage)],["스킬계수",pct(c.skillDamage)],["속도보정",pct(c.speedBonus)],["브레이크",pct(c.breakPct)],["피해감소",pct(c.damageReducePct)],["직접DPS",fmt(c.directDps)]];metrics.innerHTML=items.map(([k,v])=>`<div class="metric"><b>${k}</b><span>${v}</span></div>`).join("");const vals=[["공격력",Math.min(100,c.projectedAttack/90000*100)],["치명",c.critChance],["추가타",c.extraChance],["강타",Math.min(100,c.strongDamage)],["연타",Math.min(100,c.multiDamage*2)],["적주피",Math.min(100,c.enemyDamage)],["스킬",Math.min(100,c.skillDamage/3)],["속도",Math.min(100,Math.max(0,c.speedBonus)/3)],["생존",Math.min(100,c.survivalBonus*5)],["직접",Math.min(100,c.directDps/50000*100)]];drawRadar(vals);bars.innerHTML=vals.map(([k,v])=>`<div class="bar-item"><div class="bar-head"><span>${k}</span><span>${pct(v)}</span></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");renderQA();renderSkillDamage()}
+function renderDashboard(){const cMin=POB.normalizedValue(DB,state,state.selected,"min"),cAvg=POB.normalizedValue(DB,state,state.selected,"avg"),cMax=POB.normalizedValue(DB,state,state.selected,"max");scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / 침식 ${c.preset.erosion} / 용문 ${c.preset.dragon} / 밤축 ${c.preset.night}</small></div>`).join("");const c=cAvg,items=[["공격력",fmt(c.projectedAttack)],["방어력",fmt(c.defense)],["치명",pct(c.critChance)],["치피",pct(c.critDamage)],["추가타",pct(c.extraChance)],["강타",pct(c.strongDamage)],["연타",pct(c.multiDamage)],["적주피",pct(c.enemyDamage)],["무방비",pct(c.unarmored)],["최종피해",pct(c.finalDamage)],["보석증폭",pct(c.gemDamagePct||0)],["질풍",pct(c.galeDamage)],["스킬계수",pct(c.skillDamage)],["속도보정",pct(c.speedBonus)],["브레이크",pct(c.breakPct)],["피해감소",pct(c.damageReducePct)],["직접DPS",fmt(c.directDps)]];metrics.innerHTML=items.map(([k,v])=>`<div class="metric"><b>${k}</b><span>${v}</span></div>`).join("");const vals=[["공격력",Math.min(100,c.projectedAttack/90000*100)],["치명",c.critChance],["추가타",c.extraChance],["강타",Math.min(100,c.strongDamage)],["연타",Math.min(100,c.multiDamage*2)],["적주피",Math.min(100,c.enemyDamage)],["스킬",Math.min(100,c.skillDamage/3)],["속도",Math.min(100,Math.max(0,c.speedBonus)/3)],["생존",Math.min(100,c.survivalBonus*5)],["직접",Math.min(100,c.directDps/50000*100)]];drawRadar(vals);bars.innerHTML=vals.map(([k,v])=>`<div class="bar-item"><div class="bar-head"><span>${k}</span><span>${pct(v)}</span></div><div class="bar"><div class="fill" style="width:${v}%"></div></div></div>`).join("");renderQA();renderSkillDamage()}
 function renderSkillDamage(){
   const panel=document.getElementById("skillDamagePanel");
   if(!panel||!POB.skillDamageRows)return;

@@ -195,6 +195,116 @@ function expectedDamageScore(db,state,sel=state.selected,kind="avg"){
   };
 }
 
+function combatProfile(state){
+  const mode=state&&state.mode==="abyss"?"abyss":"raid";
+  const durationSec=mode==="abyss"?60:300;
+  const windowSec=60;
+  const downtimeSec=10;
+  const windows=Math.max(1,Math.ceil(durationSec/windowSec));
+  const activeSec=Math.max(1,durationSec-downtimeSec*windows);
+  return {
+    mode,
+    label:mode==="abyss"?"어비스 1분":"레이드 5분",
+    durationSec,
+    windowSec,
+    downtimeSec,
+    windows,
+    activeSec
+  };
+}
+
+function combatDurationSec(state){
+  return combatProfile(state).durationSec;
+}
+
+function combatModeLabel(state){
+  return combatProfile(state).label;
+}
+
+function rawValuesByKey(obj,key,out=[]){
+  if(!obj||typeof obj!=="object")return out;
+  for(const [k,v] of Object.entries(obj)){
+    if(k===key)out.push(v);
+    if(v&&typeof v==="object")rawValuesByKey(v,key,out);
+  }
+  return out;
+}
+
+function rawNumbersByKey(obj,key){
+  return rawValuesByKey(obj,key,[]).map(n).filter(v=>Number.isFinite(v)&&v>0);
+}
+
+function hintText(rune){
+  const raw=rune&&rune.rawOption?rune.rawOption:{};
+  return String(raw.expectedUptimeHint||raw.uptimeRisk||"").toLowerCase();
+}
+
+function runeCombatFactor(rune,profile){
+  const raw=rune&&rune.rawOption?rune.rawOption:{};
+  const hint=hintText(rune);
+  let factor=1;
+
+  if(hint.includes("position"))factor*=0.55;
+  if(hint.includes("content"))factor*=0.70;
+  if(hint.includes("resource")||hint.includes("lowhp")||hint.includes("damagetaken"))factor*=0.65;
+  if(hint.includes("classdependent")||hint.includes("allyheal"))factor*=0.75;
+  if(hint.includes("breakwindow"))factor*=0.78;
+  if(hint.includes("cycle")||hint.includes("frequency"))factor*=0.82;
+  if(hint.includes("erosion"))factor*=0.86;
+  if(hint.includes("dragonmark"))factor*=0.88;
+  if(hint.includes("rampup")||hint.includes("contamination"))factor*=0.80;
+
+  const cooldowns=rawNumbersByKey(raw,"cooldownSec");
+  const durations=rawNumbersByKey(raw,"durationSec");
+  if(cooldowns.length&&durations.length){
+    const cooldown=Math.max(...cooldowns);
+    const duration=Math.max(...durations);
+    if(cooldown>=30){
+      const casts=Math.max(1,Math.floor((profile.durationSec-1)/cooldown)+1);
+      const uptime=Math.min(profile.activeSec,casts*duration)/profile.activeSec;
+      factor*=clamp(0.45+uptime*0.55,0.45,1);
+    }
+  }
+
+  return clamp(factor,0.25,1);
+}
+
+function selectionCombatFactor(db,sel,profile){
+  const selected=selectedRunes(db,sel);
+  const factors=selected.map(r=>runeCombatFactor(r,profile)).filter(v=>v<0.995);
+  if(!factors.length)return 1;
+  const product=factors.reduce((acc,v)=>acc*v,1);
+  return clamp(Math.pow(product,1/factors.length),0.35,1);
+}
+
+function combatDpsSummary(db,state,sel=state.selected,kind="avg"){
+  const current=expectedDamageScore(db,state,sel,kind);
+  const baseline=expectedDamageScore(db,state,state.baseline,kind);
+  const profile=combatProfile(state);
+  const baselineDps=baseline.score||1;
+  const rawDelta=current.score-baselineDps;
+  const reliability=selectionCombatFactor(db,sel,profile);
+  const adjustedDps=baselineDps+rawDelta*reliability;
+  const baselineTotal=baselineDps*profile.activeSec;
+  const total=adjustedDps*profile.activeSec;
+  const diffPct=baselineTotal>0 ? (total/baselineTotal*100)-100 : 0;
+  return {
+    mode:profile.mode,
+    label:profile.label,
+    durationSec:profile.durationSec,
+    activeSec:profile.activeSec,
+    downtimeSec:profile.downtimeSec*profile.windows,
+    windows:profile.windows,
+    reliability,
+    dpsScore:current.score,
+    adjustedDpsScore:adjustedDps,
+    totalScore:total,
+    baselineDpsScore:baselineDps,
+    baselineTotalScore:baselineTotal,
+    diffPct
+  };
+}
+
 
 function normalizedValue(db,state,sel=state.selected,kind="avg"){
   const rawExpected = expectedDamageScore(db,state,sel,kind);
@@ -202,7 +312,9 @@ function normalizedValue(db,state,sel=state.selected,kind="avg"){
   const raw = rawExpected.calc;
   const baseScore = baseExpected.score || 1;
   const value = baseScore > 0 ? (rawExpected.score / baseScore) * 100 : 100;
-  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: value, diffPct: value - 100, expectedAxes: rawExpected.axes};
+  const combat=combatDpsSummary(db,state,sel,kind);
+  const combatValue=combat.baselineDpsScore>0 ? (combat.adjustedDpsScore/combat.baselineDpsScore)*100 : 100;
+  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: combatValue, rawValueScore: value, diffPct: combatValue - 100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat};
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,n(v)))}
@@ -306,6 +418,8 @@ function runSelfTest(db){
   const cRaid=calc(db,state,modeSel,"avg");
   state.mode="abyss";
   const cAbyss=calc(db,state,modeSel,"avg");
+  const raidCombat=combatDpsSummary(db,{...state,mode:"raid"},state.selected,"avg");
+  const abyssCombat=combatDpsSummary(db,{...state,mode:"abyss"},state.selected,"avg");
   const changed={...state,stats:{...state.stats,critStat:state.stats.critStat+1000,extraStat:state.stats.extraStat+100}};
   const cChanged=calc(db,changed,changed.selected,"avg");
   const utilityDb=JSON.parse(JSON.stringify(db));
@@ -319,12 +433,13 @@ function runSelfTest(db){
     {name:"평균 점수 산출",pass:Number.isFinite(c1.score)&&c1.score>0,detail:Math.round(c1.score).toLocaleString()},
     {name:"패시브 ON/OFF 반응",pass:c1.score!==c2.score,detail:`ON ${Math.round(c1.score)} / OFF ${Math.round(c2.score)}`},
     {name:"어비스/레이드 모드 반응",pass:cRaid.score!==cAbyss.score,detail:`레이드 ${Math.round(cRaid.score)} / 어비스 ${Math.round(cAbyss.score)}`},
+    {name:"레이드 5분 / 어비스 1분 전투시간 반영",pass:raidCombat.durationSec===300&&abyssCombat.durationSec===60,detail:`${raidCombat.label} ${raidCombat.durationSec}초 / ${abyssCombat.label} ${abyssCombat.durationSec}초`},
     {name:"직접DPS 산출",pass:Number.isFinite(c1.directDps)&&c1.directDps>=0,detail:Math.round(c1.directDps).toLocaleString()},
     {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"기준 세팅 100.00"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`}
   ];
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,formulaV2Context,skillDamageRows,gemDamagePct,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

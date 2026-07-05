@@ -1,28 +1,89 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>마비노기 모바일 POB v12 Trusted</title><link rel="stylesheet" href="style.css?v=0.0006"/></head>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>게리롱 멋대로 POB식 밸류 v0.0008</title>
+  <link rel="stylesheet" href="style.css?v=0.0008"/>
+</head>
 <body>
-<header><div class="brand"><h1>게리롱 멋대로 POB식 밸류</h1><p id="appVersion">v0.0006</p></div><div class="header-actions"><form id="authForm" class="auth-form"><input id="nicknameInput" type="text" aria-label="닉네임" title="닉네임" autocomplete="username"><input id="passwordInput" type="password" aria-label="암호" title="암호" autocomplete="current-password"><button id="loginBtn" type="submit">로그인</button><button id="logoutBtn" type="button" hidden>로그아웃</button><span id="authStatus">비로그인 저장</span></form><button id="resetBtn">초기화</button></div></header>
+<header>
+  <div class="brand">
+    <h1>게리롱 멋대로 POB식 밸류</h1>
+    <p id="appVersion">v0.0008</p>
+  </div>
+  <div class="header-actions">
+    <form id="authForm" class="auth-form">
+      <input id="nicknameInput" type="text" aria-label="닉네임" title="닉네임" autocomplete="username">
+      <input id="passwordInput" type="password" aria-label="암호" title="암호" autocomplete="current-password">
+      <button id="loginBtn" type="submit">로그인</button>
+      <button id="logoutBtn" type="button" hidden>로그아웃</button>
+      <span id="authStatus">비로그인 저장</span>
+    </form>
+    <button id="resetBtn">초기화</button>
+  </div>
+</header>
 <main class="layout">
-<aside class="panel equip-panel"><h2>현재 장착</h2><div id="equipSlots"></div></aside>
-<section class="maincol">
-<details class="panel dashboard collapsible-panel" open><summary class="panel-summary"><span>대시보드</span></summary>
-<div class="topline"><div><div class="mode-row"><button data-mode="raid" class="mode active">레이드</button><button data-mode="abyss" class="mode">어비스</button></div></div><div class="scorebox"><b>밸류점수</b><span id="scoreValue">0</span></div></div>
-<div class="state-cards" id="stateCards"></div>
-<div class="radar-wrap"><canvas id="radar" width="460" height="340"></canvas><div id="metrics" class="metrics"></div></div>
-<div id="bars" class="bars"></div>
-</details>
-<details class="panel collapsible-panel" open><summary class="panel-summary"><span>상태/환경 입력</span></summary><div class="form-grid" id="settings"></div><p class="hint">스탯창 공격력은 기준값. 룬 교체 시 공격력%는 기준 세팅 대비 차이만 반영.</p><button id="saveBaseline">현재 장착을 기준 세팅으로 저장</button></details>
-<details class="panel collapsible-panel" open><summary class="panel-summary skill-panel-summary"><span>검술사 스킬 예상 데미지</span><button id="swordsmanToggle" type="button" class="class-toggle on">ON</button></summary><p class="hint">현재 스탯, 장착 룬, 패시브, 평균 조건을 기준으로 노크리/크리/브레이크/브레이크 익스텐션을 계산한다.</p><div id="classPassiveList" class="compact-list skill-passive-list"></div><div id="skillDamagePanel" class="skill-damage"></div></details>
-<details class="panel collapsible-panel" open><summary class="panel-summary"><span>룬 추천 순위</span></summary><div class="mode-row"><button data-rank="emblem" class="rank-tab active">엠블럼</button><button data-rank="weapon" class="rank-tab">무기</button><button data-rank="head" class="rank-tab">방어구</button></div><div id="ranking"></div></details>
-<details class="panel collapsible-panel"><summary class="panel-summary"><span>밸류점수 기준</span></summary>
-<div class="formula-box">
-<b>밸류점수 = 장비 비교용 상대 점수</b>
-<p>실제 게임 DPS가 아니라, 현재 기준 세팅을 100.00으로 고정한 상대 비교 점수다.</p>
-<code>현재 기준 세팅 = 100.00 / 교체 세팅 = 후보 점수 ÷ 기준 점수 × 100</code>
-<p>추천 순위는 현재 장착 세팅을 기준으로 해당 슬롯만 바꿨을 때 밸류점수가 얼마나 오르는지 계산한다.</p><p><b>공식 v2:</b> 공격력 A, 공증 B, 피증 C, 태그 강화 D, 치명 F, 무방비/브레이크 G, 스킬계수 H, 추가타 K, 최종피해 L을 분리해 계산한다.</p><p><b>속도/쿨감:</b> 룬 추천 점수에 직접 가치화하지 않고 스킬별 쿨/1분 피해에서 별도 확인한다.</p>
-</div></details>
-<details class="panel collapsible-panel"><summary class="panel-summary"><span>QA 검수 결과</span></summary><div id="qaPanel" class="audit"></div></details>
-</section></main>
-<script src="data.js?v=0.0006"></script><script src="core.js?v=0.0006"></script><script src="app.js?v=0.0006"></script></body></html>
+  <aside class="panel equip-panel">
+    <h2>현재 장착</h2>
+    <div id="equipSlots"></div>
+  </aside>
+  <section class="maincol">
+    <details class="panel dashboard collapsible-panel" open>
+      <summary class="panel-summary"><span>대시보드</span></summary>
+      <div class="topline">
+        <div>
+          <div class="mode-row">
+            <button data-mode="raid" class="mode active">레이드 5분</button>
+            <button data-mode="abyss" class="mode">어비스 1분</button>
+          </div>
+        </div>
+        <div class="scorebox"><b>밸류점수</b><span id="scoreValue">0</span></div>
+      </div>
+      <div class="state-cards" id="stateCards"></div>
+      <div class="radar-wrap"><canvas id="radar" width="460" height="340"></canvas><div id="metrics" class="metrics"></div></div>
+      <div id="bars" class="bars"></div>
+    </details>
+    <details class="panel collapsible-panel" open>
+      <summary class="panel-summary"><span>상태/환경 입력</span></summary>
+      <div class="form-grid" id="settings"></div>
+      <p class="hint">스탯창 공격력은 기준값. 룬 교체 시 공격력%는 기준 세팅 대비 차이만 반영.</p>
+      <button id="saveBaseline">현재 장착을 기준 세팅으로 저장</button>
+    </details>
+    <details class="panel collapsible-panel" open>
+      <summary class="panel-summary skill-panel-summary"><span>검술사 스킬 예상 데미지</span><button id="swordsmanToggle" type="button" class="class-toggle on">ON</button></summary>
+      <p class="hint">현재 스탯, 장착 룬, 패시브, 평균 조건을 기준으로 노크리/크리/브레이크/브레이크 익스텐션을 계산한다.</p>
+      <div id="classPassiveList" class="compact-list skill-passive-list"></div>
+      <div id="skillDamagePanel" class="skill-damage"></div>
+    </details>
+    <details class="panel collapsible-panel" open>
+      <summary class="panel-summary"><span>룬 추천 순위</span></summary>
+      <div class="mode-row">
+        <button data-rank="emblem" class="rank-tab active">엠블럼</button>
+        <button data-rank="weapon" class="rank-tab">무기</button>
+        <button data-rank="head" class="rank-tab">방어구</button>
+      </div>
+      <div id="ranking"></div>
+    </details>
+    <details class="panel collapsible-panel">
+      <summary class="panel-summary"><span>밸류점수 기준</span></summary>
+      <div class="formula-box">
+        <b>밸류점수 = 장비 비교용 상대 점수</b>
+        <p>현재 기준 세팅을 100.00으로 고정하고, 교체 세팅의 기대딜 변화율을 비교한다.</p>
+        <code>교체 세팅 점수 = 후보 점수 ÷ 기준 점수 × 100</code>
+        <p><b>공식 v2:</b> 공격력, 피해 증가, 태그 강화, 치명 기대값, 무방비/브레이크, 스킬계수, 추가타, 최종피해를 분리 계산한다.</p>
+        <p><b>속도/쿨감:</b> 전투 중 모션과 실제 운용 손실이 있어 룬 추천 점수에 직접 가치화하지 않는다. 스킬별 쿨/1분 피해는 참고값으로만 분리 표시한다.</p>
+        <p><b>전투 기준:</b> 어비스는 1분, 레이드는 5분 기준 총 기대딜을 함께 표시한다.</p>
+      </div>
+    </details>
+    <details class="panel collapsible-panel">
+      <summary class="panel-summary"><span>QA 검수 결과</span></summary>
+      <div id="qaPanel" class="audit"></div>
+    </details>
+  </section>
+</main>
+<script src="data.js?v=0.0008"></script>
+<script src="core.js?v=0.0008"></script>
+<script src="app.js?v=0.0008"></script>
+</body>
+</html>

@@ -79,12 +79,35 @@ function selectionFocusScore(db,sel,tags){
     return sum+focus.reduce((acc,tag)=>acc+tagEffectScore(tag,r.effects||{},text),0);
   },0)/focus.length;
 }
+function runeFocusScore(r,tags){
+  const focus=normalizeFocusTags(tags);
+  if(!r||!focus.length)return 0;
+  const text=runeText(r);
+  return focus.reduce((sum,tag)=>sum+tagEffectScore(tag,r.effects||{},text),0);
+}
 function tagFocusAdjustment(db,state,sel){
   const focus=normalizeFocusTags(state&&state.focusTags);
   if(!focus.length)return{multiplier:1,score:0,baselineScore:0,active:[]};
   const score=selectionFocusScore(db,sel,focus);
   const baselineScore=selectionFocusScore(db,state.baseline,focus);
   return{multiplier:clamp(1+(score-baselineScore)*0.18,0.65,1.85),score,baselineScore,active:focus};
+}
+function slotValueDelta(db,state,slot,runeId,kind="avg"){
+  const currentId=(state.selected&&state.selected[slot])||"";
+  const candidateId=runeId||"";
+  if(candidateId===currentId)return{diffPct:0,baseDiffPct:0,tagDiffPct:0,valueScore:100,combatValueScore:100,rawValueScore:100,tagScore:0,currentTagScore:0,activeTags:normalizeFocusTags(state&&state.focusTags)};
+  const current=normalizedValue(db,state,state.selected,kind);
+  const candidateSel={...state.selected,[slot]:candidateId};
+  const candidate=normalizedValue(db,state,candidateSel,kind);
+  const baseDiff=candidate.valueScore-current.valueScore;
+  const activeTags=normalizeFocusTags(state&&state.focusTags);
+  const currentRune=runeById(db,currentId);
+  const candidateRune=runeById(db,candidateId);
+  const currentTagScore=runeFocusScore(currentRune,activeTags);
+  const tagScore=runeFocusScore(candidateRune,activeTags);
+  const tagDiff=activeTags.length?clamp((tagScore-currentTagScore)*4.5,-30,30):0;
+  const diff=baseDiff+tagDiff;
+  return{diffPct:diff,baseDiffPct:baseDiff,tagDiffPct:tagDiff,valueScore:100+diff,combatValueScore:candidate.combatValueScore,rawValueScore:candidate.rawValueScore,tagScore,currentTagScore,activeTags};
 }
 
 function statePreset(state,kind){
@@ -372,8 +395,7 @@ function normalizedValue(db,state,sel=state.selected,kind="avg"){
   const combat=combatDpsSummary(db,state,sel,kind);
   const combatValue=combat.baselineDpsScore>0 ? (combat.adjustedDpsScore/combat.baselineDpsScore)*100 : 100;
   const tagFocus=tagFocusAdjustment(db,state,sel);
-  const focusedValue=100+(combatValue-100)*tagFocus.multiplier;
-  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: focusedValue, combatValueScore: combatValue, rawValueScore: value, diffPct: focusedValue - 100, combatDiffPct: combatValue - 100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat, tagFocus};
+  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: combatValue, combatValueScore: combatValue, rawValueScore: value, diffPct: combatValue - 100, combatDiffPct: combatValue - 100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat, tagFocus};
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,n(v)))}
@@ -499,6 +521,6 @@ function runSelfTest(db){
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

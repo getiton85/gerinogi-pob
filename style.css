@@ -19,6 +19,12 @@
 .slot-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;background:#10151d;border:1px solid #354052;border-radius:10px;padding:10px;color:#eef3fa;text-align:left}
 .slot-toggle small{color:#9ca8b7}
 .slot-current{font-size:12px;color:#9ca8b7;margin-top:5px;line-height:1.35}
+.focus-tags{margin-top:16px;border-top:1px solid #2f3848;padding-top:14px}
+.focus-tags label{display:block;color:#ff7a2a;font-size:18px;font-weight:1000;margin-bottom:9px}
+.focus-tag-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.focus-tag{width:100%;min-height:38px;padding:8px 10px;border:1px solid #354052;background:#10151d;color:#dce6f2;border-radius:10px;text-align:center;white-space:nowrap}
+.focus-tag.active{background:#ff6a18;color:#111;border-color:#ff6a18}
+.focus-tags p{font-size:12px;line-height:1.4;margin-top:9px;color:#9ca8b7}
 .rune-menu{display:none;margin-top:8px;max-height:260px;overflow:auto;background:#0d121a;border:1px solid #303947;border-radius:12px;padding:6px}
 .rune-menu.open{display:block}
 .rune-choice{width:100%;display:flex;justify-content:space-between;gap:8px;align-items:center;background:#151b24;border:1px solid #273142;border-radius:10px;margin:5px 0;padding:9px 10px;color:#eef3fa;text-align:left}

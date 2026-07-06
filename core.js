@@ -3,6 +3,21 @@ const SLOT_CAT={emblem:"emblem",weapon:"weapon",head:"armor",top:"armor",bottom:
 const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",shoes:""};
 const DEFAULT_STATS={attack:57582,defense:18542,breakPower:2914,strongStat:4957,comboStat:1532,skillPower:2729,areaPower:1412,recoveryPower:2468,weakpointDodge:1358,extraStat:2797,damageReduce:2998,fastAttack:2047,multiStat:1681,fastSkill:1757,extraHp:27183,ultimatePower:1366,critStat:8649,critDamageBase:300};
 const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightBlessingUptime:0.25,focusUptime:0.5,nightTraceLevel:45,galeStacksMax:5,ultimateCycleSec:75,breakExtensionMultiplier:2,gemLines:0};
+const TAG_FOCUS=[
+  {id:"strong",label:"강타"},
+  {id:"multi",label:"연타"},
+  {id:"interrupt",label:"방해"},
+  {id:"support",label:"보조"},
+  {id:"move",label:"이동"},
+  {id:"survival",label:"생존"},
+  {id:"element",label:"원소"},
+  {id:"summon",label:"소환"},
+  {id:"crit",label:"치명타"},
+  {id:"extra",label:"추가타"},
+  {id:"attack",label:"공격력"},
+  {id:"healing",label:"힐링"},
+  {id:"break",label:"브레이크"}
+];
 
 const VALUE_WEIGHTS={
   attack:1.08,
@@ -29,6 +44,48 @@ function runeById(db,id){return allRunes(db).find(r=>r.id===id)}
 function selectedRunes(db,sel){return Object.values(sel).map(id=>runeById(db,id)).filter(Boolean)}
 function add(e,k,v){if(typeof v==="number" && Number.isFinite(v))e[k]=(e[k]||0)+v}
 function merge(a,b){const o={...a};for(const[k,v]of Object.entries(b||{}))add(o,k,n(v));return o}
+function normalizeFocusTags(tags){
+  const valid=new Set(TAG_FOCUS.map(t=>t.id));
+  return [...new Set(Array.isArray(tags)?tags:[])].filter(id=>valid.has(id));
+}
+function runeText(r){
+  return String((r&&r.name)||"")+" "+String((r&&r.tag)||"")+" "+String((r&&r.communityTier)||"")+" "+JSON.stringify((r&&r.rawOption)||{});
+}
+function tagEffectScore(tag,e,text){
+  const t=String(text||"").toLowerCase();
+  const has=(...words)=>words.some(w=>t.includes(String(w).toLowerCase()));
+  let score=0;
+  if(tag==="strong")score+=n(e.strongHitDamagePct)/18+has("강타","strong")*0.8;
+  if(tag==="multi")score+=n(e.multiHitDamagePct)/18+has("연타","multi")*0.8;
+  if(tag==="interrupt")score+=n(e.targetIncomingDamageIncreasePct)/20+n(e.unarmoredDamagePct)/22+n(e.defenseBreakDamagePct)/22+has("방어구 파괴","무방비","침식","방해")*0.5;
+  if(tag==="support")score+=n(e.skillDamagePct)/28+n(e.cooldownRecoveryPct)/30+n(e.allSkillCooldownReductionSec)/8+n(e.ultimateGaugeGainPct)/25+has("보조","재사용","회복 속도")*0.45;
+  if(tag==="move")score+=n(e.moveSpeedPct)/15+n(e.attackSpeedPct)/24+n(e.skillSpeedPct)/24+n(e.castingSpeedPct)/24+n(e.chargeSpeedPct)/24+has("이동","속도")*0.35;
+  if(tag==="survival")score+=n(e.damageReducePct)/12+n(e.healingReceivedPct)/18+has("받는 피해","체력","회복","생존")*0.45;
+  if(tag==="element")score+=n(e.damagePct)/60+n(e.enemyDamagePct)/60+has("화상","빙결","감전","중독","상처","어둠","빛","불","번개","얼음","원소")*0.55;
+  if(tag==="summon")score+=has("소환","문장","마력의 원","화염 지대","용의 문장")*0.75;
+  if(tag==="crit")score+=n(e.critChancePct)/10+n(e.critDamagePct)/28+has("치명타","치명")*0.55;
+  if(tag==="extra")score+=n(e.extraHitChancePct)/10+has("추가타")*0.75;
+  if(tag==="attack")score+=n(e.attackPct)/14+n(e.flatAttack)/3500+has("공격력")*0.45;
+  if(tag==="healing")score+=n(e.recoveryPct)/18+n(e.healingReceivedPct)/14+has("힐","회복량","회복")*0.6;
+  if(tag==="break")score+=n(e.breakSkillDamagePct)/18+n(e.unarmoredDamagePct)/24+n(e.targetIncomingDamageIncreasePct)/24+has("브레이크","무방비","방어구 파괴")*0.65;
+  return Math.max(0,Math.min(3,score));
+}
+function selectionFocusScore(db,sel,tags){
+  const focus=normalizeFocusTags(tags);
+  if(!focus.length)return 0;
+  const runes=selectedRunes(db,sel);
+  return runes.reduce((sum,r)=>{
+    const text=runeText(r);
+    return sum+focus.reduce((acc,tag)=>acc+tagEffectScore(tag,r.effects||{},text),0);
+  },0)/focus.length;
+}
+function tagFocusAdjustment(db,state,sel){
+  const focus=normalizeFocusTags(state&&state.focusTags);
+  if(!focus.length)return{multiplier:1,score:0,baselineScore:0,active:[]};
+  const score=selectionFocusScore(db,sel,focus);
+  const baselineScore=selectionFocusScore(db,state.baseline,focus);
+  return{multiplier:clamp(1+(score-baselineScore)*0.18,0.65,1.85),score,baselineScore,active:focus};
+}
 
 function statePreset(state,kind){
   if(kind==="min")return{name:"최소",erosion:0,dragon:0,night:0,gale:0,nightTrace:0};
@@ -314,7 +371,9 @@ function normalizedValue(db,state,sel=state.selected,kind="avg"){
   const value = baseScore > 0 ? (rawExpected.score / baseScore) * 100 : 100;
   const combat=combatDpsSummary(db,state,sel,kind);
   const combatValue=combat.baselineDpsScore>0 ? (combat.adjustedDpsScore/combat.baselineDpsScore)*100 : 100;
-  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: combatValue, rawValueScore: value, diffPct: combatValue - 100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat};
+  const tagFocus=tagFocusAdjustment(db,state,sel);
+  const focusedValue=100+(combatValue-100)*tagFocus.multiplier;
+  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: focusedValue, combatValueScore: combatValue, rawValueScore: value, diffPct: focusedValue - 100, combatDiffPct: combatValue - 100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat, tagFocus};
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,n(v)))}
@@ -440,6 +499,6 @@ function runSelfTest(db){
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

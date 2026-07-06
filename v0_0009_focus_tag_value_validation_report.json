@@ -1,0 +1,50 @@
+{
+  "version": "0.0009",
+  "display": "v0.0009",
+  "scope": [
+    "현재 장착 영역 하단에 목표 태그 선택 기능 추가",
+    "강타, 연타, 방해, 보조, 이동, 생존, 원소, 소환, 치명타, 추가타, 공격력, 힐링, 브레이크 총 13개 태그 지원",
+    "선택한 태그와 맞는 옵션을 가진 룬의 실전 밸류를 목표 점수로 보정",
+    "추천 순위에 목표 점수, 실전 점수, 원점수를 분리 표시",
+    "v0.0009 버전 표기와 캐시 키를 index.html에 반영"
+  ],
+  "checks": {
+    "implementation": "PASS",
+    "checklist": "PASS",
+    "number_compare": {
+      "status": "PASS",
+      "baseline_normalized": 100,
+      "sample_normal_value": 203.6068,
+      "sample_extra_tag_value": 230.6481,
+      "gem_three_line_calc_ratio": 2.452,
+      "tag_count": 13
+    },
+    "inverse_check": {
+      "status": "PASS",
+      "detail": "태그 미선택 시 기존 실전 밸류와 동일하고, 태그 선택 시 목표 점수만 보정된다."
+    },
+    "ui_check": {
+      "status": "PASS",
+      "detail": "초기화, 룬 검색, 목표 태그, 보석 선택, 접이식 패널, 검술사 스킬 예상 데미지 연결을 코드 기준으로 확인했다.",
+      "browser_note": "인앱 브라우저 보안 정책상 file 페이지 직접 자동 열기는 차단되어 정적 연결 검수로 대체했다."
+    },
+    "connection_check": {
+      "status": "PASS",
+      "detail": "로컬 최신 출력본과 GitHub Desktop 폴더가 모두 v0.0009, 캐시 키 ?v=0.0009를 사용한다."
+    },
+    "regression_check": {
+      "status": "PASS",
+      "tests": [
+        "node --check data.js",
+        "node --check core.js",
+        "node --check app.js",
+        "v26_expected_damage_test.js",
+        "validation/v27_value_audit.js",
+        "POB.runSelfTest",
+        "skillDamageRows 9개 스킬 산출",
+        "레이드 300초 / 어비스 60초 분리 산출"
+      ]
+    }
+  },
+  "upload_status": "READY_TO_COMMIT"
+}

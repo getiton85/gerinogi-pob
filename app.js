@@ -1,5 +1,5 @@
 const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
-function freshState(){return {selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
+function freshState(){return {selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",focusTags:[],stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
 const STORAGE_KEY="mabi_pob_v12";
 const AUTH_SESSION_KEY="mabi_pob_auth_session";
 function normalizeNickname(name){return String(name||"").trim()}
@@ -15,6 +15,8 @@ function normalizeState(next){
   next.env={...POB.DEFAULT_ENV,...(next.env||{})};
   next.mode=next.mode||"raid";
   next.rankSlot=next.rankSlot||"weapon";
+  const validTags=new Set((POB.TAG_FOCUS||[]).map(t=>t.id));
+  next.focusTags=[...new Set(Array.isArray(next.focusTags)?next.focusTags:[])].filter(id=>validTags.has(id));
   return next;
 }
 function readJson(key){try{return JSON.parse(localStorage.getItem(key)||"null")}catch(e){return null}}
@@ -142,7 +144,7 @@ function bindRuneChoices(root=equipSlots){
   });
 }
 function renderEquip(){
-  equipSlots.innerHTML=Object.entries(SLOT_LABELS).map(([slot,label])=>{
+  const slotHtml=Object.entries(SLOT_LABELS).map(([slot,label])=>{
     const current=runeByIdLocal(state.selected[slot]);
     return '<div class="slot"><label>'+label+'</label>'+
       '<button type="button" class="slot-toggle" data-slot="'+slot+'"><span>'+(current?current.name:"없음")+'</span><small>열기</small></button>'+
@@ -151,6 +153,10 @@ function renderEquip(){
       '<div class="rune-search-wrap"><input class="rune-search" data-slot="'+slot+'" type="search" aria-label="룬 이름 또는 초성 검색" title="룬 이름 또는 초성 검색" autocomplete="off"></div>'+
       '<div class="rune-results" id="results_'+slot+'">'+renderRuneRows(slot)+'</div></div></div>';
   }).join("");
+  const tagHtml='<div class="focus-tags"><label>목표 태그</label><div class="focus-tag-grid">'+
+    (POB.TAG_FOCUS||[]).map(t=>'<button type="button" class="focus-tag '+(state.focusTags.includes(t.id)?"active":"")+'" data-tag="'+t.id+'">#'+t.label+'</button>').join("")+
+    '</div><p>선택한 태그와 맞는 옵션의 실전 밸류를 더 크게 봅니다.</p></div>';
+  equipSlots.innerHTML=slotHtml+tagHtml;
   equipSlots.querySelectorAll(".slot-toggle").forEach(btn=>{
     btn.onclick=()=>{
       const slot=btn.dataset.slot;
@@ -171,6 +177,16 @@ function renderEquip(){
     input.onclick=e=>e.stopPropagation();
   });
   bindRuneChoices();
+  equipSlots.querySelectorAll(".focus-tag").forEach(btn=>{
+    btn.onclick=()=>{
+      const tag=btn.dataset.tag;
+      const set=new Set(state.focusTags||[]);
+      if(set.has(tag))set.delete(tag);else set.add(tag);
+      state.focusTags=[...set];
+      renderAll();
+      save();
+    };
+  });
 }
 
 function renderClass(){const on=state.classEnabled.swordsman;if(swordsmanToggle){swordsmanToggle.textContent=on?"ON":"OFF";swordsmanToggle.className="class-toggle "+(on?"on":"off");swordsmanToggle.onclick=e=>{e.preventDefault();e.stopPropagation();state.classEnabled.swordsman=!state.classEnabled.swordsman;renderAll();save()}}if(classPassiveList){classPassiveList.innerHTML=DB.classes[0].passives.map(p=>`<div class="passive-mini ${on?"":"off"}"><b>${p.name}</b><small>${p.note||""}</small></div>`).join("")}}
@@ -290,8 +306,11 @@ function renderDashboard(){
   scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);
   stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / ${c.combat.label} / 실전 ${pct(c.combat.reliability*100)}</small></div>`).join("");
   const c=cAvg,combat=c.combat||POB.combatDpsSummary(DB,state,state.selected,"avg");
+  const focusNames=(POB.TAG_FOCUS||[]).filter(t=>state.focusTags.includes(t.id)).map(t=>"#"+t.label).join(" ");
   const items=[
     ["전투 기준",combat.label],
+    ["목표 태그",focusNames||"없음"],
+    ["태그 보정",pct((c.tagFocus&&c.tagFocus.multiplier?c.tagFocus.multiplier:1)*100)],
     ["전투시간",combat.durationSec+"초"],
     ["실제 공격시간",combat.activeSec+"초"],
     ["공백시간",combat.downtimeSec+"초"],
@@ -339,8 +358,8 @@ function renderRank(){
   ranking.innerHTML=(DB.runes[cat]||[]).map(r=>{
     const sel={...state.selected,[slot]:r.id};
     const nv=POB.normalizedValue(DB,state,sel,"avg");
-    return{r,diff:nv.diffPct,value:nv.valueScore,raw:nv.rawValueScore,reliability:nv.combat.reliability};
-  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · 실전 ${x.value.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
+    return{r,diff:nv.diffPct,value:nv.valueScore,combat:nv.combatValueScore,raw:nv.rawValueScore,focus:nv.tagFocus&&nv.tagFocus.multiplier?nv.tagFocus.multiplier:1,reliability:nv.combat.reliability};
+  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · 목표 ${x.value.toFixed(2)}점 · 실전 ${x.combat.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
 }
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}
 function renderAll(){renderEquip();renderClass();renderSettings();renderDashboard();renderRank();save()}

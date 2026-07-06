@@ -1,5 +1,5 @@
 {
-  "version": "0.0009",
-  "display": "v0.0009",
-  "note": "목표 태그 선택 기능을 추가해 강타, 연타, 치명타, 공격력 등 원하는 방향에 맞는 룬 밸류를 별도로 비교"
+  "version": "0.0011",
+  "display": "v0.0011",
+  "note": "Rune recommendations show their equipped-rune basis, and DPS/total expected damage hide sub-10000 detail."
 }

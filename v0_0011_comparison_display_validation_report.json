@@ -1,0 +1,27 @@
+{
+  "version": "0.0011",
+  "checks": {
+    "syntax": "PASS",
+    "expected_damage_regression": "PASS",
+    "value_audit": "PASS",
+    "same_rune_delta": "PASS",
+    "tagged_comparison_changes_percent": "PASS",
+    "tag_selection_does_not_change_dashboard": "PASS",
+    "large_damage_display": "PASS",
+    "version_bump": "PASS"
+  },
+  "numeric_samples": {
+    "sameRuneDiffPct": 0,
+    "plainComparePct": 0.3448275862069039,
+    "taggedComparePct": 0.505541871921189,
+    "smallDpsLabel": "1만 미만",
+    "zeroLabel": "0",
+    "eokLabel": "1억 2,345만"
+  },
+  "notes": [
+    "Rune slot lists and ranking rows use the equipped rune as the comparison basis.",
+    "Selected focus tags affect only rune replacement percent and sorting.",
+    "Dashboard value score remains stable when focus tags change.",
+    "DPS basis and total expected damage hide sub-10000 detail."
+  ]
+}

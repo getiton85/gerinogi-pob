@@ -40,6 +40,21 @@ function save(){
   }
 }
 function n(v){return Number(v)||0} function pct(v){return (Math.round(v*10)/10)+"%"} function plusPct(v){const x=Math.round(v*10)/10;return (x>=0?"+":"")+x+"%"} function fmt(v){return Math.round(v).toLocaleString()} function fmtScore(v){return Math.round(n(v)*100)/100} function gemPct(lines){return Math.round((n(lines)*22*2.2)*10)/10}
+function fmtLarge(v){
+  const rounded=Math.round(n(v));
+  const sign=rounded<0?"-":"";
+  const abs=Math.abs(rounded);
+  if(abs>=100000000){
+    const eok=Math.floor(abs/100000000);
+    const man=Math.floor((abs%100000000)/10000);
+    return sign+eok.toLocaleString()+"억"+(man?" "+man.toLocaleString()+"만":"");
+  }
+  if(abs>=10000){
+    const man=Math.round(abs/1000)/10;
+    return sign+man.toLocaleString()+"만";
+  }
+  return rounded===0 ? "0" : sign+"1만 미만";
+}
 
 
 const authForm=document.getElementById("authForm");
@@ -113,10 +128,8 @@ function slotDelta(slot,runeId){
   runeId = runeId || "";
   if(runeId === currentId) return {label:"현재", cls:"same", diff:0};
 
-  const current = POB.normalizedValue(DB,state,state.selected,"avg").valueScore;
-  const sel = {...state.selected,[slot]:runeId};
-  const candidate = POB.normalizedValue(DB,state,sel,"avg").valueScore;
-  const diff = candidate - current;
+  const result = POB.slotValueDelta(DB,state,slot,runeId,"avg");
+  const diff = result.diffPct;
   const label = `${diff >= 0 ? "+" : ""}${(Math.round(diff*100)/100).toFixed(2)}%`;
   return {label, cls: diff >= 0 ? "up" : "down", diff};
 }
@@ -153,9 +166,9 @@ function renderEquip(){
       '<div class="rune-search-wrap"><input class="rune-search" data-slot="'+slot+'" type="search" aria-label="룬 이름 또는 초성 검색" title="룬 이름 또는 초성 검색" autocomplete="off"></div>'+
       '<div class="rune-results" id="results_'+slot+'">'+renderRuneRows(slot)+'</div></div></div>';
   }).join("");
-  const tagHtml='<div class="focus-tags"><label>목표 태그</label><div class="focus-tag-grid">'+
+  const tagHtml='<div class="focus-tags"><label>룬 비교 태그</label><div class="focus-tag-grid">'+
     (POB.TAG_FOCUS||[]).map(t=>'<button type="button" class="focus-tag '+(state.focusTags.includes(t.id)?"active":"")+'" data-tag="'+t.id+'">#'+t.label+'</button>').join("")+
-    '</div><p>선택한 태그와 맞는 옵션의 실전 밸류를 더 크게 봅니다.</p></div>';
+    '</div><p>선택한 태그는 룬 선택창과 추천 순위의 교체 %에만 반영됩니다.</p></div>';
   equipSlots.innerHTML=slotHtml+tagHtml;
   equipSlots.querySelectorAll(".slot-toggle").forEach(btn=>{
     btn.onclick=()=>{
@@ -306,17 +319,14 @@ function renderDashboard(){
   scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);
   stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / ${c.combat.label} / 실전 ${pct(c.combat.reliability*100)}</small></div>`).join("");
   const c=cAvg,combat=c.combat||POB.combatDpsSummary(DB,state,state.selected,"avg");
-  const focusNames=(POB.TAG_FOCUS||[]).filter(t=>state.focusTags.includes(t.id)).map(t=>"#"+t.label).join(" ");
   const items=[
     ["전투 기준",combat.label],
-    ["목표 태그",focusNames||"없음"],
-    ["태그 보정",pct((c.tagFocus&&c.tagFocus.multiplier?c.tagFocus.multiplier:1)*100)],
     ["전투시간",combat.durationSec+"초"],
     ["실제 공격시간",combat.activeSec+"초"],
     ["공백시간",combat.downtimeSec+"초"],
     ["실전 보정",pct(combat.reliability*100)],
-    ["DPS 기준",fmt(combat.adjustedDpsScore)],
-    ["총 기대딜",fmt(combat.totalScore)],
+    ["DPS 기준",fmtLarge(combat.adjustedDpsScore)],
+    ["총 기대딜",fmtLarge(combat.totalScore)],
     ["공격력",fmt(c.projectedAttack)],
     ["방어력",fmt(c.defense)],
     ["치명",pct(c.critChance)],
@@ -355,11 +365,14 @@ function renderRank(){
     b.onclick=()=>{state.rankSlot=b.dataset.rank;renderRank()};
   });
   const slot=state.rankSlot,cat=POB.SLOT_CAT[slot];
-  ranking.innerHTML=(DB.runes[cat]||[]).map(r=>{
+  const current=runeByIdLocal(state.selected[slot]);
+  const basis='<p class="rank-basis">비교 기준: 현재 장착 '+(current?current.name:"없음")+' · 선택 태그는 이 추천 순위의 %와 정렬에만 반영됩니다.</p>';
+  ranking.innerHTML=basis+(DB.runes[cat]||[]).map(r=>{
     const sel={...state.selected,[slot]:r.id};
     const nv=POB.normalizedValue(DB,state,sel,"avg");
-    return{r,diff:nv.diffPct,value:nv.valueScore,combat:nv.combatValueScore,raw:nv.rawValueScore,focus:nv.tagFocus&&nv.tagFocus.multiplier?nv.tagFocus.multiplier:1,reliability:nv.combat.reliability};
-  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · 목표 ${x.value.toFixed(2)}점 · 실전 ${x.combat.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
+    const tv=POB.slotValueDelta(DB,state,slot,r.id,"avg");
+    return{r,diff:tv.diffPct,value:tv.valueScore,combat:nv.combatValueScore,raw:nv.rawValueScore,tag:tv.tagDiffPct,reliability:nv.combat.reliability};
+  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · 비교 ${x.value.toFixed(2)}점 · 실전 ${x.combat.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}${state.focusTags.length?` · 태그 ${x.tag>=0?"+":""}${x.tag.toFixed(2)}%`:""}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
 }
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}
 function renderAll(){renderEquip();renderClass();renderSettings();renderDashboard();renderRank();save()}

@@ -1,0 +1,33 @@
+{
+  "version": "0.0007",
+  "summary": "레이드 5분 / 어비스 1분 기준 전투 DPS 표시를 추가하고, 속도/쿨감은 기존처럼 직접 밸류에 반영하지 않도록 유지했다.",
+  "implemented": [
+    "레이드 버튼을 5분 전투 기준으로 표시",
+    "어비스 버튼을 1분 전투 기준으로 표시",
+    "대시보드에 전투 기준, 전투시간, DPS 기준, 총 기대딜 표시",
+    "normalizedValue 결과에 combat 요약값 추가",
+    "속도/쿨감 사이클축은 cycleAxis=1로 유지"
+  ],
+  "numberCheck": {
+    "raidDurationSec": 300,
+    "abyssDurationSec": 60,
+    "raidTotalScore": 62302156,
+    "abyssTotalScore": 12460431,
+    "raidToAbyssRatio": 5,
+    "speedCycleAxis": 1
+  },
+  "sevenStepValidation": {
+    "1_implementation": "PASS",
+    "2_checklist": "PASS",
+    "3_numberComparison": "PASS",
+    "4_inverseCheck": "PASS",
+    "5_uiCheck": "PASS_STATIC_BROWSER_ENGINE_UNAVAILABLE",
+    "6_connectionCheck": "PASS",
+    "7_regression": "PASS"
+  },
+  "notes": [
+    "Playwright 브라우저 자동 캡처는 현재 런타임의 playwright-core 누락으로 실행하지 못했다.",
+    "대신 index/app/core/version 정적 연결, 로컬 서버 200 응답, 기존 계산 회귀 테스트를 통과했다.",
+    "속도, 쿨타임 감소, 회복 계열은 사용자의 최신 기준에 따라 여전히 최하 밸류 원칙을 유지한다."
+  ]
+}

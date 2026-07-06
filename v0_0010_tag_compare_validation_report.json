@@ -1,0 +1,50 @@
+{
+  "version": "0.0010",
+  "display": "v0.0010",
+  "scope": [
+    "Selected tags are separated from dashboard score modifiers.",
+    "Selected tags only affect rune picker and recommendation comparison percent against the currently equipped rune.",
+    "The currently equipped rune always compares as 0.00 percent against itself.",
+    "Korean large-number formatting is applied only to DPS score and total expected damage.",
+    "Version display and cache keys are updated to v0.0010."
+  ],
+  "checks": {
+    "implementation": "PASS",
+    "checklist": "PASS",
+    "number_compare": {
+      "status": "PASS",
+      "tag_count": 13,
+      "same_rune_diff": 0,
+      "plain_compare_sample": -17.5207,
+      "tag_compare_sample": -29.6707,
+      "dashboard_stable_with_tags": true
+    },
+    "inverse_check": {
+      "status": "PASS",
+      "detail": "Without selected tags, default combat value comparison is used. With selected tags, only rune comparison percent changes."
+    },
+    "ui_check": {
+      "status": "PASS_WITH_BROWSER_LIMITATION",
+      "detail": "Static UI wiring confirms rune compare tags, rune search, empty rune selection, recommendation ranking, and dashboard number formatting.",
+      "browser_note": "Automatic file and localhost preview checks are blocked by the current browser policy in this environment."
+    },
+    "connection_check": {
+      "status": "PASS",
+      "detail": "index.html, app.js, core.js, and version.json are wired for v0.0010."
+    },
+    "regression_check": {
+      "status": "PASS",
+      "tests": [
+        "node --check data.js",
+        "node --check core.js",
+        "node --check app.js",
+        "v26_expected_damage_test.js",
+        "validation/v27_value_audit.js",
+        "POB.runSelfTest",
+        "Dashboard score unchanged by selected tags",
+        "Rune comparison percent changes when selected tags change"
+      ]
+    }
+  },
+  "upload_status": "READY_TO_REVIEW"
+}

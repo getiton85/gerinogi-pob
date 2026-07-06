@@ -39,6 +39,7 @@
 .equip-panel::-webkit-scrollbar-track,.rune-menu::-webkit-scrollbar-track{background:#10151d}
 .rune-menu{max-height:320px}
 @media(max-height:760px){.equip-panel{max-height:calc(100vh - 86px)}.rune-menu{max-height:240px}}
+.rank-basis{background:#10151d;border:1px solid #303947;border-radius:12px;padding:10px 12px;margin:10px 0;color:#b7c4d6;font-size:13px;line-height:1.35}
 
 /* v22 safe UI fix: 상위 레이아웃 고정, 내부 요소만 보정 */
 input::-webkit-outer-spin-button,

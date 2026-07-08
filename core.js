@@ -472,13 +472,17 @@ function skillDamageRows(db,state,sel=state.selected,kind="avg"){
 }
 
 function runeSeasonLabel(rune){
-  if(!rune)return "season2";
-  if(rune.season)return String(rune.season);
+  if(!rune)return "시즌2";
+  if(rune.season!==undefined&&rune.season!==null){
+    const raw=String(rune.season);
+    const m=raw.match(/(\d+)/);
+    return "시즌"+(m?m[1]:raw);
+  }
   const id=String(rune.id||"").toLowerCase();
   const name=String(rune.name||"");
-  if(id.includes("season0")||id.includes("_s0_")||name==="현란함")return "season0";
-  if(id.includes("season1")||id.includes("_s1_")||id.includes("s1_"))return "season1";
-  return "season2";
+  if(id.includes("season0")||id.includes("_s0_")||name==="현란함")return "시즌0";
+  if(id.includes("season1")||id.includes("_s1_")||id.includes("s1_"))return "시즌1";
+  return "시즌2";
 }
 
 function runeText(rune){
@@ -577,6 +581,39 @@ function comparisonSummary(db,state,compareSel=state.compareSelected||state.sele
   };
 }
 
+function damageTimelinePoints(calc,classInfo,durationSec){
+  const duration=Math.max(10,n(durationSec)||60);
+  const steps=12;
+  const combat=calc&&calc.combat?calc.combat:{};
+  const dps=Math.max(0,n(combat.adjustedDpsScore)||n(calc&&calc.score)||0);
+  const uptime=clamp(classInfo&&classInfo.averageUptime!==undefined?classInfo.averageUptime:1,0.05,1);
+  const rampSec=Math.max(5,duration*(0.06+(1-uptime)*0.3));
+  const points=[];
+  let total=0,lastT=0,lastDps=dps*(0.78+0.22*(1-Math.exp(0)));
+  for(let i=0;i<=steps;i++){
+    const t=duration*i/steps;
+    const activeRamp=0.78+0.22*(1-Math.exp(-t/rampSec));
+    const effectiveDps=dps*activeRamp;
+    if(i>0){
+      const dt=t-lastT;
+      total+=((lastDps+effectiveDps)/2)*dt;
+    }
+    points.push({time:t,damage:Math.round(total),dps:effectiveDps,uptime});
+    lastT=t;
+    lastDps=effectiveDps;
+  }
+  return points;
+}
+
+function expectedDamageTimeline(summary){
+  const duration=Math.max(10,n(summary&&summary.durationSec)||60);
+  return {
+    durationSec:duration,
+    current:damageTimelinePoints(summary&&summary.current,summary&&summary.currentClass,duration),
+    compare:damageTimelinePoints(summary&&summary.compare,summary&&summary.compareClass,duration)
+  };
+}
+
 function diminishingPoints(calc){
   const axes=calc&&calc.expectedAxes?calc.expectedAxes:{};
   const pairs=[
@@ -646,6 +683,6 @@ function runSelfTest(db){
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,diminishingPoints,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,damageTimelinePoints,expectedDamageTimeline,diminishingPoints,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

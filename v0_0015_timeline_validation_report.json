@@ -1,0 +1,70 @@
+{
+  "pass": true,
+  "tests": [
+    {
+      "name": "version marker",
+      "pass": true,
+      "detail": "cache and visible version are v0.0015"
+    },
+    {
+      "name": "user season labels",
+      "pass": true,
+      "detail": "시즌1 / 시즌0"
+    },
+    {
+      "name": "no raw season label in compare options",
+      "pass": true,
+      "detail": "compare labels use Korean season text"
+    },
+    {
+      "name": "compare option percent",
+      "pass": true,
+      "detail": "compare dropdown includes season and delta percent"
+    },
+    {
+      "name": "all season2 labels normalized",
+      "pass": true,
+      "detail": "ok"
+    },
+    {
+      "name": "all rune season labels normalized",
+      "pass": true,
+      "detail": "ok"
+    },
+    {
+      "name": "timeline function exported",
+      "pass": true,
+      "detail": "timeline functions exist"
+    },
+    {
+      "name": "timeline has two curves",
+      "pass": true,
+      "detail": "current 13 / compare 13"
+    },
+    {
+      "name": "timeline duration follows raid",
+      "pass": true,
+      "detail": "duration 300"
+    },
+    {
+      "name": "timeline monotonic damage",
+      "pass": true,
+      "detail": "monotonic cumulative damage"
+    },
+    {
+      "name": "timeline finite damage",
+      "pass": true,
+      "detail": "[{\"time\":0,\"damage\":0,\"dps\":1632662.185765465,\"uptime\":1},{\"time\":25,\"damage\":45137419,\"dps\":1978331.337025323,\"uptime\":1}]"
+    },
+    {
+      "name": "chart labels changed",
+      "pass": true,
+      "detail": "time chart labels exist"
+    },
+    {
+      "name": "compare css exists",
+      "pass": true,
+      "detail": "responsive compare styles exist"
+    }
+  ]
+}

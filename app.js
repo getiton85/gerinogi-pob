@@ -35,7 +35,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0014";
+if(appVersionEl)appVersionEl.textContent="v0.0015";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -112,8 +112,19 @@ function runeByIdLocal(id){
 function tierBadge(r){
   return r && r.communityTier ? `<em class="tier-badge tier-${String(r.communityTier).replace("+","plus").toLowerCase()}">${r.communityTier}</em>` : "";
 }
+function seasonLabelText(r){
+  if(!r||!r.id)return "";
+  const raw=POB.runeSeasonLabel?POB.runeSeasonLabel(r):(r.season!==undefined?"시즌"+r.season:"시즌2");
+  const m=String(raw).match(/(\d+)/);
+  return m ? "시즌"+m[1] : String(raw);
+}
+function seasonNumber(r){
+  const m=seasonLabelText(r).match(/(\d+)/);
+  return m ? m[1] : "";
+}
 function seasonBadge(r){
-  return r && r.season!==undefined ? `<em class="season-badge season-${String(r.season).replace(/[^0-9a-z_-]/gi,"")}">시즌${r.season}</em>` : "";
+  const num=seasonNumber(r);
+  return num ? `<em class="season-badge season-${num}">시즌${num}</em>` : "";
 }
 function normalizeSearchText(text){return String(text||"").toLowerCase().replace(/\s+/g,"").replace(/[+]/g,"")}
 function choseong(text){
@@ -140,6 +151,10 @@ function slotDelta(slot,runeId){
   const diff = result.diffPct;
   const label = `${diff >= 0 ? "+" : ""}${(Math.round(diff*100)/100).toFixed(2)}%`;
   return {label, cls: diff >= 0 ? "up" : "down", diff};
+}
+function deltaPctText(diff){
+  const rounded=(Math.round(n(diff)*100)/100).toFixed(2);
+  return (n(diff)>=0?"+":"")+rounded+"%";
 }
 
 function renderRuneRows(slot,query=""){
@@ -369,10 +384,77 @@ function renderSkillDamage(){
 const COMPARE_SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
 function fmtCombat(v){const value=Math.max(0,Math.floor(n(v)));const eok=Math.floor(value/100000000);const man=Math.floor((value%100000000)/10000);if(eok&&man)return eok.toLocaleString()+"억 "+man.toLocaleString()+"만";if(eok)return eok.toLocaleString()+"억";if(man)return man.toLocaleString()+"만";return "1만 미만"}
 function ensureCompareSelection(){state.compareSelected=sanitizeSelection(state.compareSelected||state.selected)}
-function compareOptions(slot){const cat=POB.SLOT_CAT[slot];return [`<option value="">없음</option>`].concat((DB.runes[cat]||[]).map(r=>{const selected=state.compareSelected[slot]===r.id?"selected":"";const season=POB.runeSeasonLabel?POB.runeSeasonLabel(r):r.season||"season2";return `<option value="${r.id}" ${selected}>[${season}] ${r.name}</option>`})).join("")}
+function compareOptions(slot){
+  const cat=POB.SLOT_CAT[slot];
+  const noneDelta=slotDelta(slot,"");
+  const noneSelected=!state.compareSelected[slot]?"selected":"";
+  return [`<option value="" ${noneSelected}>없음 | ${deltaPctText(noneDelta.diff)}</option>`].concat((DB.runes[cat]||[]).map(r=>{
+    const selected=state.compareSelected[slot]===r.id?"selected":"";
+    const d=slotDelta(slot,r.id);
+    return `<option value="${r.id}" ${selected}>${seasonLabelText(r)} | ${r.name} | ${deltaPctText(d.diff)}</option>`;
+  })).join("");
+}
 function renderCompareEquip(){const root=document.getElementById("compareSlots");if(!root)return;ensureCompareSelection();root.innerHTML=Object.keys(COMPARE_SLOT_LABELS).map(slot=>`<label class="compare-slot"><span>${COMPARE_SLOT_LABELS[slot]}</span><select data-compare-slot="${slot}">${compareOptions(slot)}</select></label>`).join("");root.querySelectorAll("[data-compare-slot]").forEach(sel=>{sel.onchange=()=>{state.compareSelected[sel.dataset.compareSlot]=sel.value||"";renderComparison();save()}});const copyBtn=document.getElementById("copyCompareBtn");if(copyBtn)copyBtn.onclick=e=>{e.preventDefault();e.stopPropagation();state.compareSelected=JSON.parse(JSON.stringify(state.selected));renderCompareEquip();renderComparison();save()}}
 function renderComparison(){const summaryBox=document.getElementById("compareSummary");const chart=document.getElementById("compareChart");if(!summaryBox&&!chart)return;ensureCompareSelection();const s=POB.comparisonSummary(DB,state,state.compareSelected,"avg");const compareNames=Object.keys(COMPARE_SLOT_LABELS).filter(slot=>state.selected[slot]!==state.compareSelected[slot]).map(slot=>{const r=runeByIdLocal(state.compareSelected[slot]);return `${COMPARE_SLOT_LABELS[slot]}: ${r?r.name:"없음"}`});if(summaryBox){summaryBox.innerHTML=[["밸류 차이",plusPct(s.valueDiffPct)],["DPS 차이",plusPct(s.dpsDiffPct)],["총 기대딜 차이",plusPct(s.totalDiffPct)],["현재 DPS",fmtCombat(s.current.combat.adjustedDpsScore)],["비교 DPS",fmtCombat(s.compare.combat.adjustedDpsScore)],["현재 총 기대딜",fmtCombat(s.current.combat.totalScore)],["비교 총 기대딜",fmtCombat(s.compare.combat.totalScore)],["현재 평균 가동률",pct(s.currentClass.averageUptime*100)],["비교 평균 가동률",pct(s.compareClass.averageUptime*100)],["바뀐 부위",compareNames.length?compareNames.join("<br>"):"없음"]].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}if(chart)drawCompareChart(chart,s)}
-function drawCompareChart(canvas,summary){const ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle="#0f1722";ctx.fillRect(0,0,w,h);const pad=42,baseY=h-48,topY=28,chartH=baseY-topY;const current=POB.diminishingPoints(summary.current);const compare=POB.diminishingPoints(summary.compare);ctx.strokeStyle="#26364a";ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=baseY-chartH*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-18,y);ctx.stroke();ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText((i*25)+"%",8,y+4)}function plot(points,color){ctx.beginPath();points.forEach((p,i)=>{const x=pad+i*((w-pad-28)/(points.length-1));const y=baseY-(p.curve/100)*chartH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();points.forEach((p,i)=>{const x=pad+i*((w-pad-28)/(points.length-1));const y=baseY-(p.curve/100)*chartH;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()})}plot(current,"#94a3b8");plot(compare,"#ff6a18");current.forEach((p,i)=>{const x=pad+i*((w-pad-28)/(current.length-1));ctx.fillStyle="#dbe4ee";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.label,x,baseY+24)});ctx.textAlign="left";ctx.font="13px system-ui";ctx.fillStyle="#94a3b8";ctx.fillText("현재",pad,18);ctx.fillStyle="#ff6a18";ctx.fillText("비교",pad+48,18)}
+function fmtChartDamage(v){
+  const x=Math.max(0,Math.round(n(v)));
+  if(x>=100000000){
+    const eok=Math.floor(x/100000000);
+    const man=Math.floor((x%100000000)/10000);
+    return man?`${eok}억 ${man}만`:`${eok}억`;
+  }
+  if(x>=10000)return Math.floor(x/10000)+"만";
+  return "0";
+}
+function drawCompareChart(canvas,summary){
+  const ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;
+  const timeline=POB.expectedDamageTimeline?POB.expectedDamageTimeline(summary):{current:[],compare:[],durationSec:summary.durationSec||60};
+  const current=timeline.current||[],compare=timeline.compare||[];
+  const all=current.concat(compare);
+  const maxDamage=Math.max(1,...all.map(p=>n(p.damage)));
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#0f1722";
+  ctx.fillRect(0,0,w,h);
+  const padL=72,padR=18,baseY=h-48,topY=28,chartW=w-padL-padR,chartH=baseY-topY;
+  ctx.strokeStyle="#26364a";
+  ctx.lineWidth=1;
+  ctx.font="12px system-ui";
+  ctx.textAlign="right";
+  for(let i=0;i<=4;i++){
+    const y=baseY-chartH*i/4;
+    const label=fmtChartDamage(maxDamage*i/4);
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
+    ctx.fillStyle="#8fa0b5";ctx.fillText(label,padL-8,y+4);
+  }
+  function plot(points,color){
+    if(points.length<2)return;
+    ctx.beginPath();
+    points.forEach((p,i)=>{
+      const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
+      const y=baseY-(n(p.damage)/maxDamage)*chartH;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();
+    points.forEach((p,i)=>{
+      if(i%2&&i!==points.length-1)return;
+      const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
+      const y=baseY-(n(p.damage)/maxDamage)*chartH;
+      ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();
+    });
+  }
+  plot(current,"#94a3b8");
+  plot(compare,"#ff6a18");
+  ctx.textAlign="center";
+  current.forEach((p,i)=>{
+    if(i%2&&i!==current.length-1)return;
+    const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
+    ctx.fillStyle="#dbe4ee";ctx.font="12px system-ui";ctx.fillText(Math.round(n(p.time))+"초",x,baseY+24);
+  });
+  ctx.textAlign="left";ctx.font="13px system-ui";
+  ctx.fillStyle="#94a3b8";ctx.fillText("현재 장착 곡선",padL,18);
+  ctx.fillStyle="#ff6a18";ctx.fillText("비교추가 곡선",padL+118,18);
+  ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText("누적 예상딜 / 시간",w-132,18);
+}
 function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2+8,R=118,N=vals.length;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#334155";ctx.lineWidth=1;for(let ring=1;ring<=4;ring++){ctx.beginPath();for(let i=0;i<N;i++){const a=-Math.PI/2+i*2*Math.PI/N,r=R*ring/4,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}vals.forEach(([label],i)=>{const a=-Math.PI/2+i*2*Math.PI/N;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();ctx.fillStyle="#dbe4ee";ctx.font="13px system-ui";ctx.textAlign=Math.cos(a)>.2?"left":Math.cos(a)<-.2?"right":"center";ctx.fillText(label,cx+Math.cos(a)*(R+26),cy+Math.sin(a)*(R+26))});ctx.beginPath();vals.forEach(([_,v],i)=>{const a=-Math.PI/2+i*2*Math.PI/N,r=R*Math.max(0,Math.min(100,v))/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.closePath();ctx.fillStyle="rgba(255,106,24,.35)";ctx.strokeStyle="#ff6a18";ctx.lineWidth=3;ctx.fill();ctx.stroke()}
 function renderRank(){
   document.querySelectorAll(".rank-tab").forEach(b=>{

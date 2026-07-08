@@ -1,5 +1,5 @@
 const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
-function freshState(){return {selected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",focusTags:[],stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
+function freshState(){return {selected:{...POB.DEFAULT_SELECTED},compareSelected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",focusTags:[],stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
 const STORAGE_KEY="mabi_pob_v12";
 const AUTH_SESSION_KEY="mabi_pob_auth_session";
 function normalizeNickname(name){return String(name||"").trim()}
@@ -9,6 +9,7 @@ function normalizeState(next){
   const base=freshState();
   next=next||base;
   next.selected=sanitizeSelection(next.selected);
+  next.compareSelected=sanitizeSelection(next.compareSelected||next.selected);
   next.baseline=sanitizeSelection(next.baseline);
   next.classEnabled={swordsman:false,...(next.classEnabled||{})};
   next.stats={...POB.DEFAULT_STATS,...(next.stats||{})};
@@ -31,6 +32,10 @@ function loadInitialState(){
   return normalizeState(readJson(STORAGE_KEY)||freshState());
 }
 let state=loadInitialState();
+const brandTitle=document.querySelector(".brand h1");
+const appVersionEl=document.getElementById("appVersion");
+if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
+if(appVersionEl)appVersionEl.textContent="v0.0014";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -107,6 +112,9 @@ function runeByIdLocal(id){
 function tierBadge(r){
   return r && r.communityTier ? `<em class="tier-badge tier-${String(r.communityTier).replace("+","plus").toLowerCase()}">${r.communityTier}</em>` : "";
 }
+function seasonBadge(r){
+  return r && r.season!==undefined ? `<em class="season-badge season-${String(r.season).replace(/[^0-9a-z_-]/gi,"")}">시즌${r.season}</em>` : "";
+}
 function normalizeSearchText(text){return String(text||"").toLowerCase().replace(/\s+/g,"").replace(/[+]/g,"")}
 function choseong(text){
   const base=0xac00, initial=["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
@@ -145,7 +153,7 @@ function renderRuneRows(slot,query=""){
 }
 function renderRuneButton(slot,r,d){
   return '<button type="button" class="rune-choice '+d.cls+'" data-slot="'+slot+'" data-rune="'+r.id+'">'+
-    '<span>'+tierBadge(r)+r.name+'</span><b>'+d.label+'</b></button>';
+    '<span>'+seasonBadge(r)+r.name+'</span><b>'+d.label+'</b></button>';
 }
 function bindRuneChoices(root=equipSlots){
   root.querySelectorAll(".rune-choice").forEach(btn=>{
@@ -291,17 +299,17 @@ function renderSettings(){
   `;
   settings.querySelectorAll("[data-stat]").forEach(i=>i.oninput=e=>{
     state.stats[e.target.dataset.stat]=n(e.target.value);
-    renderDashboard();renderRank();updateDerivedPanel();save();
+    renderDashboard();renderComparison();renderRank();updateDerivedPanel();save();
   });
   settings.querySelectorAll("[data-env]").forEach(i=>i.oninput=e=>{
     state.env[e.target.dataset.env]=n(e.target.value);
-    renderDashboard();renderRank();updateDerivedPanel();save();
+    renderDashboard();renderComparison();renderRank();updateDerivedPanel();save();
   });
   settings.querySelectorAll("[data-env-choice]").forEach(i=>i.onchange=e=>{
     state.env[e.target.dataset.envChoice]=n(e.target.value);
-    renderDashboard();renderRank();updateDerivedPanel();save();
+    renderDashboard();renderComparison();renderRank();updateDerivedPanel();save();
   });
-  saveBaseline.onclick=()=>{state.baseline=JSON.parse(JSON.stringify(state.selected));renderDashboard();save()}
+  saveBaseline.onclick=()=>{state.baseline=JSON.parse(JSON.stringify(state.selected));renderDashboard();renderComparison();save()}
 }
 
 function syncModeButtons(){
@@ -358,6 +366,13 @@ function renderSkillDamage(){
   const rows=POB.skillDamageRows(DB,state,state.selected,"avg");
   panel.innerHTML=rows.map(r=>`<div class="skill-card"><div class="skill-head"><div><b>${r.name}</b><small>${r.form||"기본"} · ${r.tags.join(" / ")}</small></div><span>${r.cooldownSec.toFixed(1)}초</span></div><div class="skill-grid"><div><em>노크리</em><strong>${fmt(r.noCrit)}</strong></div><div><em>크리</em><strong>${fmt(r.crit)}</strong></div><div><em>브레이크</em><strong>${fmt(r.breakDamage)}</strong></div><div><em>브레이크 익스텐션</em><strong>${fmt(r.breakExtension)}</strong></div></div><p>1분 노크리 기준 ${fmt(r.damagePerMinute)} · 툴팁 피해 기반</p></div>`).join("");
 }
+const COMPARE_SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
+function fmtCombat(v){const value=Math.max(0,Math.floor(n(v)));const eok=Math.floor(value/100000000);const man=Math.floor((value%100000000)/10000);if(eok&&man)return eok.toLocaleString()+"억 "+man.toLocaleString()+"만";if(eok)return eok.toLocaleString()+"억";if(man)return man.toLocaleString()+"만";return "1만 미만"}
+function ensureCompareSelection(){state.compareSelected=sanitizeSelection(state.compareSelected||state.selected)}
+function compareOptions(slot){const cat=POB.SLOT_CAT[slot];return [`<option value="">없음</option>`].concat((DB.runes[cat]||[]).map(r=>{const selected=state.compareSelected[slot]===r.id?"selected":"";const season=POB.runeSeasonLabel?POB.runeSeasonLabel(r):r.season||"season2";return `<option value="${r.id}" ${selected}>[${season}] ${r.name}</option>`})).join("")}
+function renderCompareEquip(){const root=document.getElementById("compareSlots");if(!root)return;ensureCompareSelection();root.innerHTML=Object.keys(COMPARE_SLOT_LABELS).map(slot=>`<label class="compare-slot"><span>${COMPARE_SLOT_LABELS[slot]}</span><select data-compare-slot="${slot}">${compareOptions(slot)}</select></label>`).join("");root.querySelectorAll("[data-compare-slot]").forEach(sel=>{sel.onchange=()=>{state.compareSelected[sel.dataset.compareSlot]=sel.value||"";renderComparison();save()}});const copyBtn=document.getElementById("copyCompareBtn");if(copyBtn)copyBtn.onclick=e=>{e.preventDefault();e.stopPropagation();state.compareSelected=JSON.parse(JSON.stringify(state.selected));renderCompareEquip();renderComparison();save()}}
+function renderComparison(){const summaryBox=document.getElementById("compareSummary");const chart=document.getElementById("compareChart");if(!summaryBox&&!chart)return;ensureCompareSelection();const s=POB.comparisonSummary(DB,state,state.compareSelected,"avg");const compareNames=Object.keys(COMPARE_SLOT_LABELS).filter(slot=>state.selected[slot]!==state.compareSelected[slot]).map(slot=>{const r=runeByIdLocal(state.compareSelected[slot]);return `${COMPARE_SLOT_LABELS[slot]}: ${r?r.name:"없음"}`});if(summaryBox){summaryBox.innerHTML=[["밸류 차이",plusPct(s.valueDiffPct)],["DPS 차이",plusPct(s.dpsDiffPct)],["총 기대딜 차이",plusPct(s.totalDiffPct)],["현재 DPS",fmtCombat(s.current.combat.adjustedDpsScore)],["비교 DPS",fmtCombat(s.compare.combat.adjustedDpsScore)],["현재 총 기대딜",fmtCombat(s.current.combat.totalScore)],["비교 총 기대딜",fmtCombat(s.compare.combat.totalScore)],["현재 평균 가동률",pct(s.currentClass.averageUptime*100)],["비교 평균 가동률",pct(s.compareClass.averageUptime*100)],["바뀐 부위",compareNames.length?compareNames.join("<br>"):"없음"]].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}if(chart)drawCompareChart(chart,s)}
+function drawCompareChart(canvas,summary){const ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle="#0f1722";ctx.fillRect(0,0,w,h);const pad=42,baseY=h-48,topY=28,chartH=baseY-topY;const current=POB.diminishingPoints(summary.current);const compare=POB.diminishingPoints(summary.compare);ctx.strokeStyle="#26364a";ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=baseY-chartH*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-18,y);ctx.stroke();ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText((i*25)+"%",8,y+4)}function plot(points,color){ctx.beginPath();points.forEach((p,i)=>{const x=pad+i*((w-pad-28)/(points.length-1));const y=baseY-(p.curve/100)*chartH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();points.forEach((p,i)=>{const x=pad+i*((w-pad-28)/(points.length-1));const y=baseY-(p.curve/100)*chartH;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill()})}plot(current,"#94a3b8");plot(compare,"#ff6a18");current.forEach((p,i)=>{const x=pad+i*((w-pad-28)/(current.length-1));ctx.fillStyle="#dbe4ee";ctx.font="12px system-ui";ctx.textAlign="center";ctx.fillText(p.label,x,baseY+24)});ctx.textAlign="left";ctx.font="13px system-ui";ctx.fillStyle="#94a3b8";ctx.fillText("현재",pad,18);ctx.fillStyle="#ff6a18";ctx.fillText("비교",pad+48,18)}
 function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2+8,R=118,N=vals.length;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#334155";ctx.lineWidth=1;for(let ring=1;ring<=4;ring++){ctx.beginPath();for(let i=0;i<N;i++){const a=-Math.PI/2+i*2*Math.PI/N,r=R*ring/4,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}vals.forEach(([label],i)=>{const a=-Math.PI/2+i*2*Math.PI/N;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();ctx.fillStyle="#dbe4ee";ctx.font="13px system-ui";ctx.textAlign=Math.cos(a)>.2?"left":Math.cos(a)<-.2?"right":"center";ctx.fillText(label,cx+Math.cos(a)*(R+26),cy+Math.sin(a)*(R+26))});ctx.beginPath();vals.forEach(([_,v],i)=>{const a=-Math.PI/2+i*2*Math.PI/N,r=R*Math.max(0,Math.min(100,v))/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.closePath();ctx.fillStyle="rgba(255,106,24,.35)";ctx.strokeStyle="#ff6a18";ctx.lineWidth=3;ctx.fill();ctx.stroke()}
 function renderRank(){
   document.querySelectorAll(".rank-tab").forEach(b=>{
@@ -372,8 +387,8 @@ function renderRank(){
     const nv=POB.normalizedValue(DB,state,sel,"avg");
     const tv=POB.slotValueDelta(DB,state,slot,r.id,"avg");
     return{r,diff:tv.diffPct,value:tv.valueScore,combat:nv.combatValueScore,raw:nv.rawValueScore,tag:tv.tagDiffPct,reliability:nv.combat.reliability};
-  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${x.r.name}<br><small>${x.r.tag||""} · 비교 ${x.value.toFixed(2)}점 · 실전 ${x.combat.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}${state.focusTags.length?` · 태그 ${x.tag>=0?"+":""}${x.tag.toFixed(2)}%`:""}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
+  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${seasonBadge(x.r)}${x.r.name}<br><small>${x.r.tag||""} · 비교 ${x.value.toFixed(2)}점 · 실전 ${x.combat.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}${state.focusTags.length?` · 태그 ${x.tag>=0?"+":""}${x.tag.toFixed(2)}%`:""}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
 }
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}
-function renderAll(){renderEquip();renderClass();renderSettings();renderDashboard();renderRank();save()}
-document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;syncModeButtons();renderDashboard();renderRank();save()});resetButton.onclick=()=>{state=freshState();if(activeProfile&&activeProfile.nickname){localStorage.removeItem(profileKey(activeProfile.nickname))}else{localStorage.removeItem(STORAGE_KEY)}renderAuth();renderAll()};renderAuth();renderAll();
+function renderAll(){renderEquip();renderCompareEquip();renderClass();renderSettings();renderDashboard();renderComparison();renderRank();save()}
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;syncModeButtons();renderDashboard();renderComparison();renderRank();save()});resetButton.onclick=()=>{state=freshState();if(activeProfile&&activeProfile.nickname){localStorage.removeItem(profileKey(activeProfile.nickname))}else{localStorage.removeItem(STORAGE_KEY)}renderAuth();renderAll()};renderAuth();renderAll();

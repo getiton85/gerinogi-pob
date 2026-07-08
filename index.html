@@ -4,13 +4,13 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>게리롱 멋대로 POB식 밸류 v0.0011</title>
-  <link rel="stylesheet" href="style.css?v=0.0011"/>
+  <link rel="stylesheet" href="style.css?v=0.0013"/>
 </head>
 <body>
 <header>
   <div class="brand">
     <h1>게리롱 멋대로 POB식 밸류</h1>
-    <p id="appVersion">v0.0011</p>
+    <p id="appVersion">v0.0013</p>
   </div>
   <div class="header-actions">
     <form id="authForm" class="auth-form">
@@ -43,6 +43,24 @@
       <div class="state-cards" id="stateCards"></div>
       <div class="radar-wrap"><canvas id="radar" width="460" height="340"></canvas><div id="metrics" class="metrics"></div></div>
       <div id="bars" class="bars"></div>
+    </details>
+    <details class="panel collapsible-panel compare-panel" open>
+      <summary class="panel-summary"><span>비교 세팅 / 수확체감</span></summary>
+      <div class="compare-toolbar">
+        <button id="copyCompareBtn" type="button">비교추가</button>
+        <span>현재 장착을 복사한 뒤 원하는 부위만 바꿔 비교합니다.</span>
+      </div>
+      <div id="compareSlots" class="compare-slots"></div>
+      <div class="compare-grid">
+        <div class="compare-card">
+          <h3>비교 결과</h3>
+          <div id="compareSummary" class="compare-summary"></div>
+        </div>
+        <div class="compare-card">
+          <h3>수확체감 곡선</h3>
+          <canvas id="compareChart" width="760" height="300"></canvas>
+        </div>
+      </div>
     </details>
     <details class="panel collapsible-panel" open>
       <summary class="panel-summary"><span>상태/환경 입력</span></summary>
@@ -82,8 +100,8 @@
     </details>
   </section>
 </main>
-<script src="data.js?v=0.0011"></script>
-<script src="core.js?v=0.0011"></script>
-<script src="app.js?v=0.0011"></script>
+<script src="data.js?v=0.0014"></script>
+<script src="core.js?v=0.0014"></script>
+<script src="app.js?v=0.0014"></script>
 </body>
 </html>

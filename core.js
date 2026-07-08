@@ -471,6 +471,131 @@ function skillDamageRows(db,state,sel=state.selected,kind="avg"){
   });
 }
 
+function runeSeasonLabel(rune){
+  if(!rune)return "season2";
+  if(rune.season)return String(rune.season);
+  const id=String(rune.id||"").toLowerCase();
+  const name=String(rune.name||"");
+  if(id.includes("season0")||id.includes("_s0_")||name==="현란함")return "season0";
+  if(id.includes("season1")||id.includes("_s1_")||id.includes("s1_"))return "season1";
+  return "season2";
+}
+
+function runeText(rune){
+  if(!rune)return "";
+  const raw=rune.rawOption?JSON.stringify(rune.rawOption):"";
+  return [rune.name,rune.tag,rune.communityTier,rune.tier,raw].filter(Boolean).join(" ");
+}
+
+function hasAny(text,words){
+  return words.some(w=>text.includes(w));
+}
+
+function conditionTagsForRune(rune){
+  const text=runeText(rune);
+  const tags=[];
+  if(hasAny(text,["확률","50%","30%","25%","21%"]))tags.push("확률 발동");
+  if(hasAny(text,["재사용 대기 시간","90초","60초","30초","20초"]))tags.push("긴 쿨타임");
+  if(hasAny(text,["밤의 축복","밤의 흔적"]))tags.push("밤의 축복");
+  if(hasAny(text,["침식"]))tags.push("침식");
+  if(hasAny(text,["방어구 파괴"]))tags.push("방어구 파괴");
+  if(hasAny(text,["브레이크","무방비"]))tags.push("브레이크");
+  if(hasAny(text,["처치","아군","회복","체력","행동 불능"]))tags.push("상황 조건");
+  if(hasAny(text,["중첩","누적","스택"]))tags.push("중첩형");
+  if(hasAny(text,["상시 효과"]))tags.push("상시");
+  return [...new Set(tags)];
+}
+
+function effectTagsForRune(rune){
+  const effects=rune&&rune.effects?rune.effects:{};
+  const text=runeText(rune);
+  return TAG_FOCUS.filter(t=>tagEffectScore(t.id,effects,text)>0.25).map(t=>t.label);
+}
+
+function uptimeForRune(rune,profile){
+  if(!rune)return 1;
+  const raw=rune.rawOption||{};
+  const text=runeText(rune);
+  let uptime=runeCombatFactor(rune,profile);
+  const cooldowns=rawNumbersByKey(raw,"cooldownSec");
+  const durations=rawNumbersByKey(raw,"durationSec");
+  if(cooldowns.length&&durations.length){
+    const cd=Math.max(...cooldowns);
+    const dur=Math.max(...durations);
+    const casts=Math.max(1,Math.floor((profile.durationSec-1)/cd)+1);
+    uptime=Math.min(profile.activeSec,casts*dur)/profile.activeSec;
+  }else if(hasAny(text,["상시 효과"])){
+    uptime=1;
+  }else if(hasAny(text,["90초"])){
+    uptime=Math.min(uptime,profile.durationSec>=300?0.62:0.35);
+  }else if(hasAny(text,["60초"])){
+    uptime=Math.min(uptime,profile.durationSec>=300?0.72:0.45);
+  }
+  if(hasAny(text,["방어구 파괴"]))uptime*=0.75;
+  if(hasAny(text,["침식"]))uptime=Math.max(uptime,0.82);
+  if(hasAny(text,["밤의 축복"]))uptime=Math.max(uptime,0.75);
+  return clamp(uptime,0.1,1);
+}
+
+function classifyRune(rune,profile){
+  const uptime=uptimeForRune(rune,profile);
+  return {
+    id:rune&&rune.id||"",
+    name:rune&&rune.name||"없음",
+    season:runeSeasonLabel(rune),
+    effectTags:effectTagsForRune(rune),
+    conditionTags:conditionTagsForRune(rune),
+    uptime,
+    combatFactor:runeCombatFactor(rune,profile)
+  };
+}
+
+function classifySelection(db,sel,state){
+  const profile=combatProfile(state);
+  const runes=selectedRunes(db,sel).map(r=>classifyRune(r,profile));
+  const averageUptime=runes.length?runes.reduce((sum,r)=>sum+r.uptime,0)/runes.length:1;
+  const averageCombatFactor=selectionCombatFactor(db,sel,profile);
+  return {runes,averageUptime,averageCombatFactor,profile};
+}
+
+function comparisonSummary(db,state,compareSel=state.compareSelected||state.selected,kind="avg"){
+  const current=normalizedValue(db,state,state.selected,kind);
+  const compare=normalizedValue(db,state,compareSel,kind);
+  const currentClass=classifySelection(db,state.selected,state);
+  const compareClass=classifySelection(db,compareSel,state);
+  const dpsBase=current.combat.adjustedDpsScore||1;
+  const totalBase=current.combat.totalScore||1;
+  return {
+    current,
+    compare,
+    currentClass,
+    compareClass,
+    valueDiffPct:compare.valueScore-current.valueScore,
+    dpsDiffPct:(compare.combat.adjustedDpsScore/dpsBase*100)-100,
+    totalDiffPct:(compare.combat.totalScore/totalBase*100)-100,
+    durationSec:combatDurationSec(state)
+  };
+}
+
+function diminishingPoints(calc){
+  const axes=calc&&calc.expectedAxes?calc.expectedAxes:{};
+  const pairs=[
+    ["공격",axes.attackAxis],
+    ["피해",axes.damageAxis],
+    ["치명",axes.critAxis],
+    ["추가타",axes.extraAxis],
+    ["사이클",axes.cycleAxis],
+    ["직접",axes.directAxis],
+    ["생존",axes.survivalAxis]
+  ];
+  return pairs.map(([label,value])=>{
+    const raw=Math.max(1,n(value)||1);
+    const gain=(raw-1)*100;
+    const curve=100*(1-Math.exp(-gain/80));
+    return {label,raw,gain,curve:clamp(curve,0,100)};
+  });
+}
+
 function validate(db){
   const ids=new Set(),dup=[];
   for(const r of allRunes(db)){if(ids.has(r.id))dup.push(r.id);ids.add(r.id)}
@@ -479,8 +604,8 @@ function validate(db){
   const missing=required.filter(id=>!ids.has(id));
   const result=[];
   result.push({name:"DB 중복 ID",pass:dup.length===0,detail:dup.length?dup.join(", "):"없음"});
-  result.push({name:"엠블럼 9개",pass:counts.emblem===9,detail:`${counts.emblem}개`});
-  result.push({name:"무기 17개",pass:counts.weapon===17,detail:`${counts.weapon}개`});
+  result.push({name:"엠블럼 20개",pass:counts.emblem===20,detail:`${counts.emblem}개`});
+  result.push({name:"무기 45개",pass:counts.weapon===45,detail:`${counts.weapon}개`});
   result.push({name:"방어구 55개",pass:counts.armor===55,detail:`${counts.armor}개`});
   result.push({name:"기본 장착 비움",pass:required.length===0,detail:required.length?required.join(", "):"무장착"});
   return{counts,dup,missing,result};
@@ -521,6 +646,6 @@ function runSelfTest(db){
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,diminishingPoints,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

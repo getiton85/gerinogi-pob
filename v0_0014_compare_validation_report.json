@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "tests": [
+    {
+      "name": "version marker",
+      "pass": true,
+      "detail": "cache and visible version are v0.0014"
+    },
+    {
+      "name": "compare ui mounted",
+      "pass": true,
+      "detail": "compare panel ids exist"
+    },
+    {
+      "name": "compare renderer wired",
+      "pass": true,
+      "detail": "renderer functions exist"
+    },
+    {
+      "name": "compare css exists",
+      "pass": true,
+      "detail": "responsive compare styles exist"
+    },
+    {
+      "name": "comparison finite",
+      "pass": true,
+      "detail": "{\"value\":9.73744438559261,\"dps\":9.73744438559261,\"total\":9.737444385592624}"
+    },
+    {
+      "name": "uptime classified",
+      "pass": true,
+      "detail": "{\"uptime\":1,\"runes\":2}"
+    },
+    {
+      "name": "diminishing curve",
+      "pass": true,
+      "detail": "[{\"label\":\"공격\",\"raw\":83493.9,\"gain\":8349289.999999999,\"curve\":100},{\"label\":\"피해\",\"raw\":4.3461394900000005,\"gain\":334.61394900000005,\"curve\":98.4742351527849},{\"label\":\"치명\",\"raw\":3.547293812320721,\"gain\":254.72938123207211,\"curve\":95.85852120636804},{\"label\":\"추가타\",\"raw\":1.6188053097345132,\"gain\":61.88053097345132,\"curve\":53.86077071269286},{\"label\":\"사이클\",\"raw\":1,\"gain\":0,\"curve\":0},{\"label\":\"직접\",\"raw\":1.002448681879754,\"gain\":0.2448681879754,\"curve\":0.30561727169118313},{\"label\":\"생존\",\"raw\":1.00205,\"gain\":0.20500000000001073,\"curve\":0.2559219599482132}]"
+    },
+    {
+      "name": "mode duration",
+      "pass": true,
+      "detail": "raid 300 / abyss 60"
+    }
+  ]
+}

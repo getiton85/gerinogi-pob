@@ -111,6 +111,7 @@ const DB = {
       {
         "id": "emblem_gogyeol",
         "name": "고결함",
+        "season": 2,
         "tag": "빛",
         "effects": {
           "skillSpeedPct": 15,
@@ -149,6 +150,7 @@ const DB = {
       {
         "id": "emblem_baekgeum",
         "name": "백금 천칭",
+        "season": 2,
         "tag": "빛",
         "effects": {},
         "conditionalAlways": {
@@ -195,6 +197,7 @@ const DB = {
       {
         "id": "emblem_chowol",
         "name": "초월",
+        "season": 2,
         "tag": "빛",
         "effects": {
           "damagePct": 15,
@@ -240,6 +243,7 @@ const DB = {
       {
         "id": "emblem_chimmuk",
         "name": "침묵",
+        "season": 2,
         "tag": "어둠",
         "effects": {
           "enemyDamagePct": 33
@@ -272,6 +276,7 @@ const DB = {
       {
         "id": "emblem_haebang",
         "name": "해방",
+        "season": 2,
         "tag": "어둠",
         "effects": {
           "multiHitDamagePct": 25
@@ -311,6 +316,7 @@ const DB = {
       {
         "id": "emblem_eternal",
         "name": "영원한 밤",
+        "season": 2,
         "tag": "어둠",
         "effects": {
           "attackPct": 7,
@@ -351,6 +357,7 @@ const DB = {
       {
         "id": "emblem_taecho",
         "name": "태초",
+        "season": 2,
         "tag": "용",
         "effects": {
           "skillDamagePct": 20
@@ -383,6 +390,7 @@ const DB = {
       {
         "id": "emblem_faded_star",
         "name": "빛바랜 별",
+        "season": 2,
         "tag": "용",
         "effects": {
           "enemyDamagePct": 31,
@@ -409,6 +417,7 @@ const DB = {
       {
         "id": "emblem_greatness",
         "name": "위대함",
+        "season": 2,
         "tag": "용",
         "effects": {
           "strongHitDamagePct": 25
@@ -445,7 +454,441 @@ const DB = {
           "valueAdjustmentHint": "강타 태그 비중과 밤의 축복 유지율을 함께 곱해 평가해야 한다."
         },
         "memo": "강타 태그 비중과 밤의 축복 유지율을 함께 곱해 평가해야 한다."
+      },
+      {
+        "id": "emblem_s1_ruthless_predator",
+        "name": "무자비한 포식자",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "enemyDamagePct": 21
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 무자비한 포식자",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "무방비 공격 시 각성하여 20초 동안 적에게 주는 스킬 피해가 55% 증가하며, 모든 스킬의 재사용 대기 시간이 초기화된다. 재사용 대기 시간은 90초이다. 상시 효과로 적에게 주는 피해가 21% 증가한다.",
+          "always": {
+            "enemyDamagePct": 21
+          },
+          "conditional": [
+            {
+              "type": "unarmoredAwakening",
+              "trigger": "무방비 공격",
+              "durationSec": 20,
+              "cooldownSec": 90,
+              "effects": {
+                "skillDamagePct": 55,
+                "resetAllSkillCooldowns": true
+              }
+            }
+          ],
+          "damageRelevance": "상시 적 피해 21%는 즉시 밸류에 반영한다. 무방비 발동 각성은 강하지만 90초 쿨 조건부라 rawOption에 보존하고 사이클 모델에서 별도 반영한다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "unarmoredWindow"
+        },
+        "memo": "상시 적 피해 21%만 기본 반영. 무방비 각성은 사이클 모델 검수 후 반영."
+      },
+      {
+        "id": "emblem_s1_pure_power",
+        "name": "순수한 힘",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "ultimateGaugeGainPct": 20
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 순수한 힘",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "궁극기 사용 시, 30초 동안 적에게 주는 피해가 30% 증가한다. 궁극기 게이지 획득량이 20% 증가한다.",
+          "always": {
+            "ultimateGaugeGainPct": 20
+          },
+          "conditional": [
+            {
+              "type": "ultimateUseBuff",
+              "trigger": "궁극기 사용",
+              "durationSec": 30,
+              "effects": {
+                "enemyDamagePct": 30
+              }
+            }
+          ],
+          "damageRelevance": "궁극기 게이지 획득은 사이클 유틸 축이며, 궁극기 후 30초 피해 증가는 궁극기 주기에 따라 기대값이 크게 달라진다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "ultimateCycle"
+        },
+        "memo": "궁극기 사용 후 피해 증가는 궁극기 주기 기반으로 별도 평균화 필요."
+      },
+      {
+        "id": "emblem_s1_broken_sky",
+        "name": "부서진 하늘",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "multiHitDamagePct": 8,
+          "cooldownRecoveryPct": 8
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 부서진 하늘",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 20초 동안 연타 피해가 60% 증가한다. 또한 지속 시간 동안 공격 적중 시 14792의 추가 피해를 입히며 이 효과는 0.5초마다 한 번만 적용된다. 재사용 대기 시간은 90초이다. 상시 효과로 연타 피해가 8%, 재사용 대기 시간 회복 속도가 8% 증가한다.",
+          "always": {
+            "multiHitDamagePct": 8,
+            "cooldownRecoveryPct": 8
+          },
+          "conditional": [
+            {
+              "type": "attackAwakening",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 20,
+              "cooldownSec": 90,
+              "procIntervalSec": 0.5,
+              "directDamage": 14792,
+              "effects": {
+                "multiHitDamagePct": 60
+              }
+            }
+          ],
+          "damageRelevance": "상시 연타 피해만 즉시 반영한다. 20초 각성 직접 피해는 공격 빈도와 90초 쿨을 함께 봐야 한다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "20of90"
+        },
+        "memo": "상시 연타 8% 중심. 각성 직접 피해는 장기 DPS 모델에서 반영."
+      },
+      {
+        "id": "emblem_s1_guiding_light",
+        "name": "인도하는 빛",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {},
+        "rawOption": {
+          "rawName": "엠블럼 룬: 인도하는 빛",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "궁극기 사용 시, 자신과 주위 15m 내의 아군에게 15초 동안 8%의 공격력 증가 효과를 부여한다. 아군 회복 시, 15초 동안 자신의 공격력이 20% 증가한다.",
+          "always": {},
+          "conditional": [
+            {
+              "type": "ultimatePartyBuff",
+              "trigger": "궁극기 사용",
+              "durationSec": 15,
+              "radiusM": 15,
+              "effects": {
+                "attackPct": 8
+              }
+            },
+            {
+              "type": "allyHealBuff",
+              "trigger": "아군 회복",
+              "durationSec": 15,
+              "effects": {
+                "attackPct": 20
+              }
+            }
+          ],
+          "damageRelevance": "본인 단독 상시 딜축은 없고 궁극기/아군 회복 조건에 의존한다.",
+          "playFriction": "high",
+          "expectedUptimeHint": "partyAndHealDependent"
+        },
+        "memo": "조건부 파티/회복 기재라 기본 밸류에는 직접 반영하지 않음."
+      },
+      {
+        "id": "emblem_s1_archmage",
+        "name": "대마법사",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "skillSpeedPct": 14,
+          "castingSpeedPct": 14,
+          "chargeSpeedPct": 14,
+          "castingSkillDamagePct": 14,
+          "chargeSkillDamagePct": 14
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 대마법사",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 20초 동안 공격력이 45%, 스킬 사용 속도, 캐스팅 및 차지 속도가 25% 증가한다. 재사용 대기 시간은 90초이다. 상시 효과로 스킬 사용 속도, 캐스팅 및 차지 속도가 14%, 캐스팅 및 차지 스킬의 피해량이 14% 증가한다.",
+          "always": {
+            "skillSpeedPct": 14,
+            "castingSpeedPct": 14,
+            "chargeSpeedPct": 14,
+            "castingSkillDamagePct": 14,
+            "chargeSkillDamagePct": 14
+          },
+          "conditional": [
+            {
+              "type": "attackAwakening",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 20,
+              "cooldownSec": 90,
+              "effects": {
+                "attackPct": 45,
+                "skillSpeedPct": 25,
+                "castingSpeedPct": 25,
+                "chargeSpeedPct": 25
+              }
+            }
+          ],
+          "damageRelevance": "캐스팅/차지 스킬 비중이 높을수록 상시 피해가 유효하다. 검술사 일반 사이클에서는 속도 비중이 제한적일 수 있다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "20of90"
+        },
+        "memo": "캐스팅/차지 피해는 해당 태그 스킬 중심 세팅에서 의미가 커진다."
+      },
+      {
+        "id": "emblem_s1_scattering_blades",
+        "name": "흩날리는 검",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "attackSpeedPct": 24,
+          "extraHitChancePct": 24
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 흩날리는 검",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 35초 동안 공격력이 55%, 공격 속도가 20%, 기본 공격의 추가타 확률이 20% 증가한다. 재사용 대기 시간은 90초이다. 상시 효과로 공격 속도가 24%, 기본 공격 추가타 확률이 24% 증가한다.",
+          "always": {
+            "attackSpeedPct": 24,
+            "extraHitChancePct": 24
+          },
+          "conditional": [
+            {
+              "type": "attackAwakening",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 35,
+              "cooldownSec": 90,
+              "effects": {
+                "attackPct": 55,
+                "attackSpeedPct": 20,
+                "extraHitChancePct": 20
+              }
+            }
+          ],
+          "damageRelevance": "상시 추가타 확률은 기본 밸류에 반영한다. 각성 공격력은 35초/90초 조건부라 별도 평균화 대상이다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "35of90"
+        },
+        "memo": "기본 공격/추가타 중심 세팅에서 가치가 오른다."
+      },
+      {
+        "id": "emblem_s1_mountain_lord",
+        "name": "산맥 군주",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "strongHitDamagePct": 8,
+          "skillSpeedPct": 8
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 산맥 군주",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 20초 동안 강타 피해가 60% 증가한다. 또한 지속 시간 동안 공격 적중 시 대상과 3m 범위 내의 적들에게 79065의 추가 피해를 입히며 이 효과는 3초마다 한 번만 적용된다. 재사용 대기 시간은 90초이다. 상시 효과로 강타 피해가 8%, 스킬 사용 속도가 8% 증가한다.",
+          "always": {
+            "strongHitDamagePct": 8,
+            "skillSpeedPct": 8
+          },
+          "conditional": [
+            {
+              "type": "attackAwakening",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 20,
+              "cooldownSec": 90,
+              "procIntervalSec": 3,
+              "directDamage": 79065,
+              "radiusM": 3,
+              "effects": {
+                "strongHitDamagePct": 60
+              }
+            }
+          ],
+          "damageRelevance": "상시 강타 피해는 즉시 반영하고, 20초 각성 광역 피해는 장기 전투 프로필에서 평균화한다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "20of90"
+        },
+        "memo": "강타 태그 선택 시 상대 가치가 올라간다."
+      },
+      {
+        "id": "emblem_s1_distant_light",
+        "name": "아득한 빛",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "critChancePct": 5,
+          "critDamagePct": 10,
+          "enemyDamagePct": 5
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 아득한 빛",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 20초 동안 치명타 확률이 20%, 치명타 피해량이 50% 증가한다. 재사용 대기 시간은 90초이다. 상시 효과로 치명타 확률이 5%, 치명타 피해량이 10%, 적에게 주는 피해가 5% 증가한다.",
+          "always": {
+            "critChancePct": 5,
+            "critDamagePct": 10,
+            "enemyDamagePct": 5
+          },
+          "conditional": [
+            {
+              "type": "attackAwakening",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 20,
+              "cooldownSec": 90,
+              "effects": {
+                "critChancePct": 20,
+                "critDamagePct": 50
+              }
+            }
+          ],
+          "damageRelevance": "상시 치명/피해 3축이 모두 유효하다. 각성 치명 버프는 20초/90초 조건으로 분리한다.",
+          "playFriction": "low",
+          "expectedUptimeHint": "alwaysPlus20of90"
+        },
+        "memo": "현란함과 같은 치명 계열 비교 기준으로 유용하다."
+      },
+      {
+        "id": "emblem_s1_split_ground",
+        "name": "갈라진 땅",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "extraHitChancePct": 12
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 갈라진 땅",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 35초 동안 추가타 확률이 30% 증가하며, 추가타 적중 시 다음 공격은 선행 타격의 18% 만큼의 피해를 주는 추가 공격이 발생한다. 재사용 대기 시간은 90초이다. 상시 효과로 추가타 확률이 12% 증가한다.",
+          "always": {
+            "extraHitChancePct": 12
+          },
+          "conditional": [
+            {
+              "type": "attackAwakening",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 35,
+              "cooldownSec": 90,
+              "effects": {
+                "extraHitChancePct": 30,
+                "followUpDamagePct": 18
+              }
+            }
+          ],
+          "damageRelevance": "상시 추가타 확률은 즉시 반영한다. 각성 중 후속 타격은 추가타 빈도와 사이클 의존성이 크다.",
+          "playFriction": "medium",
+          "expectedUptimeHint": "35of90"
+        },
+        "memo": "추가타 태그 선택 시 가치가 올라간다."
+      },
+      {
+        "id": "emblem_s1_molten_earth",
+        "name": "녹아내린 대지",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {},
+        "periodicDps": 12038,
+        "rawOption": {
+          "rawName": "엠블럼 룬: 녹아내린 대지",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 1,
+          "baseStats": {
+            "additionalHp": 756
+          },
+          "rawDescription": "공격 시 50% 확률로 각성하여 20초 동안 상시 효과의 발동 주기가 1초로 변화하며, 범위 내의 모든 적에게 피해를 준다. 재사용 대기 시간은 90초이다. 상시 효과로 전투 중 5초마다 5m 범위 내의 가장 가까운 대상에게 60191의 피해를 준다.",
+          "always": {
+            "periodicDamage": 60191,
+            "periodicIntervalSec": 5
+          },
+          "conditional": [
+            {
+              "type": "attackAwakeningPeriodicUpgrade",
+              "trigger": "공격 시 50% 확률",
+              "durationSec": 20,
+              "cooldownSec": 90,
+              "periodicIntervalSec": 1,
+              "radiusM": 5,
+              "aoe": true
+            }
+          ],
+          "damageRelevance": "상시 5초 주기 피해는 직접 DPS로 반영한다. 각성 중 1초 주기 광역화는 대상 수와 90초 쿨이 필요해 rawOption에 보존한다.",
+          "playFriction": "low",
+          "expectedUptimeHint": "alwaysPlus20of90"
+        },
+        "memo": "상시 주기 피해 60191/5초를 직접 DPS로 반영."
+      },
+      {
+        "id": "emblem_s0_brilliance",
+        "name": "현란함",
+        "season": 0,
+        "tag": "시즌0",
+        "effects": {
+          "critChancePct": 10,
+          "critDamagePct": 30
+        },
+        "rawOption": {
+          "rawName": "엠블럼 룬: 현란함",
+          "slot": "emblem",
+          "rarity": "legendary",
+          "season": 0,
+          "baseStats": {
+            "additionalHp": 508
+          },
+          "rawDescription": "치명타 확률이 10% 증가하며, 적에게 주는 치명타 피해가 30% 증가한다.",
+          "always": {
+            "critChancePct": 10,
+            "critDamagePct": 30
+          },
+          "conditional": [],
+          "damageRelevance": "조건 없이 치명타 확률과 치명타 피해가 오르는 단순 고효율 치명 계열 룬이다.",
+          "playFriction": "low",
+          "expectedUptimeHint": "always"
+        },
+        "memo": "시즌0 비교용 치명 계열 기준 룬."
       }
+
     ],
     "weapon": [
       {
@@ -1201,6 +1644,834 @@ const DB = {
           "playFriction": "medium",
           "expectedUptimeHint": 1,
           "valueAdjustmentHint": "상시 공격력/치피는 반영. 행동불능 패널티는 생존 리스크 감점으로 별도 표기."
+        }
+      },
+      {
+        "id": "weapon_s1_flame",
+        "name": "불길",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "critChancePct": 18
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 불길",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "치명타 확률이 18% 증가한다. 공격 적중 시, 181171의 지속 피해: 화상을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "critChancePct": 18
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "화상",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_crystal",
+        "name": "결정",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "extraHitChancePct": 18
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 결정",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "추가타 확률이 18% 증가한다. 공격 적중 시, 181171의 지속 피해: 빙결을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "extraHitChancePct": 18
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "빙결",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_thunder",
+        "name": "뇌명",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "strongHitDamagePct": 20
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 뇌명",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "강타 피해가 20% 증가한다. 공격 적중 시, 181171의 지속 피해: 감전을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "strongHitDamagePct": 20
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "감전",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_viper_plus",
+        "name": "독사+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "multiHitDamagePct": 20
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 독사+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "연타 피해가 20% 증가한다. 공격 적중 시, 181171의 지속 피해: 중독을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "multiHitDamagePct": 20
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "중독",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_fear",
+        "name": "공포",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "critDamagePct": 18
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 공포",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "치명타 피해가 18% 증가한다. 공격 적중 시, 181171의 지속 피해: 절망을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "critDamagePct": 18
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "절망",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_executor",
+        "name": "집행자",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "recoveryPct": 20,
+          "enemyDamagePct": 10
+        },
+        "directDps": 27124.9,
+        "rawOption": {
+          "rawName": "무기 룬: 집행자",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "치유량이 20%, 적에게 주는 피해가 10% 증가한다. 공격 적중 시, 271249의 지속 피해: 심판을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "recoveryPct": 20,
+            "enemyDamagePct": 10
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "심판",
+            "damage": 271249,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_beast_plus",
+        "name": "야수+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "enemyDamagePct": 20
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 야수+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "적에게 주는 피해가 20% 증가한다. 공격 적중 시, 181171의 지속 피해: 상처를 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "enemyDamagePct": 20
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "상처",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_night_plus",
+        "name": "밤+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 20
+        },
+        "directDps": 18117.1,
+        "rawOption": {
+          "rawName": "무기 룬: 밤+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 20% 증가한다. 공격 적중 시, 181171의 지속 피해: 두려움을 준다. 재사용 대기 시간 10초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 20
+          },
+          "conditional": {
+            "type": "onAttackStatusDamage",
+            "status": "두려움",
+            "damage": 181171,
+            "cooldownSec": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_fighter_plus",
+        "name": "투사+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "enemyDamagePct": 33,
+          "multiHitDamagePct": -10
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 투사+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "적에게 주는 피해가 33% 증가한다. 결함: 멀티히트 피해가 10% 감소한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "enemyDamagePct": 33,
+            "multiHitDamagePct": -10
+          },
+          "drawback": {
+            "multiHitDamagePct": -10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_recluse_plus",
+        "name": "은둔자+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "skillDamagePct": 30,
+          "cooldownRecoveryPct": -9
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 은둔자+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "스킬 피해량이 30% 증가한다. 결함: 재사용 대기 시간 회복 속도가 9% 감소한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "skillDamagePct": 30,
+            "cooldownRecoveryPct": -9
+          },
+          "drawback": {
+            "cooldownRecoveryPct": -9
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_oblivion_plus",
+        "name": "망각+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 19
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 망각+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 19% 증가한다. 기본 공격 적중 시, 모든 스킬의 재사용 대기 시간이 9% 감소한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 19
+          },
+          "conditional": {
+            "type": "basicAttackCooldownReduction",
+            "allSkillCooldownReductionPct": 9
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_frost_wind_plus",
+        "name": "서리바람+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 20,
+          "castingSpeedPct": 25,
+          "chargeSpeedPct": 25
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 서리바람+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 20% 증가하고, 캐스팅 및 차지 속도가 25% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 20,
+            "castingSpeedPct": 25,
+            "chargeSpeedPct": 25
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_old_mage",
+        "name": "옛 마법사",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "cooldownRecoveryPct": 29,
+          "enemyDamagePct": -10
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 옛 마법사",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "재사용 대기 시간 회복 속도가 29% 증가한다. 결함: 적에게 주는 피해가 10% 감소한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "cooldownRecoveryPct": 29,
+            "enemyDamagePct": -10
+          },
+          "drawback": {
+            "enemyDamagePct": -10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_rippling_blade",
+        "name": "물결치는 날",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723
+        },
+        "directDamage": {
+          "damage": 77354,
+          "intervalFormula": "skill_plus_basic"
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 물결치는 날",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "스킬 사용 시, 다음 기본 공격 적중 시 대상에게 77354의 피해를 추가로 입히고, 다음 1회의 공격 속도가 10% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "conditional": {
+            "type": "afterSkillNextBasic",
+            "damage": 77354,
+            "nextAttackSpeedPct": 10
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_destroyer_plus",
+        "name": "파괴자+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 18,
+          "unarmoredDamagePct": 48
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 파괴자+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 18% 증가하고, 무방비 피해가 48% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 18,
+            "unarmoredDamagePct": 48
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_sword_dance_plus",
+        "name": "검무+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 검무+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "누적: 공격이 적중할 때마다 10초 동안 공격력이 2%, 치명타 확률이 1% 증가한다. 해당 효과는 최대 10회까지 중첩되며 지속 시간은 스택마다 개별로 가진다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "conditional": {
+            "trigger": "onAttackHitStack",
+            "durationSec": 10,
+            "maxStacks": 10,
+            "perStack": {
+              "attackPct": 2,
+              "critChancePct": 1
+            },
+            "stackDurationMode": "individual"
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_infinite_trajectory",
+        "name": "무수한 궤적",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 17,
+          "attackSpeedPct": 30,
+          "extraHitChancePct": 30
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 무수한 궤적",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 17%, 공격 속도가 30% 증가하며, 기본 공격 추가타 확률이 30% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 17,
+            "attackSpeedPct": 30,
+            "extraHitChancePct": 30
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_last_mercy",
+        "name": "마지막 자비",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 20
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 마지막 자비",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 20% 증가한다. 남은 체력이 50% 이하인 적을 공격했을 경우, 10초 동안 공격력이 추가로 20% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 20
+          },
+          "conditional": {
+            "trigger": "targetHpBelow",
+            "thresholdPct": 50,
+            "durationSec": 10,
+            "effects": {
+              "attackPct": 20
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_endless_cycle",
+        "name": "끝없는 순환",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 끝없는 순환",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "축적: 아군을 20회 회복시킨 이후, 다음 공격 적중 시 대상 위치에 마법진을 펼쳐 9m 범위 내의 적들에게 0.5초마다 10687의 암흑 피해를 4.5초 동안 입힌다. 축적: 적을 20회 공격한 이후, 다음 아군 회복 시 대상 위치에 마법진을 펼쳐 9m 범위 내 아군의 체력을 0.5초마다 237씩 4.5초 동안 회복한다. 축적 효과는 각각 0.5초에 한 번만 획득할 수 있다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "conditional": {
+            "trigger": "healOrAttackAccumulation",
+            "requiredHealCount": 20,
+            "requiredAttackCount": 20,
+            "damage": 10687,
+            "heal": 237,
+            "tickSec": 0.5,
+            "durationSec": 4.5,
+            "radiusM": 9
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_oath_plus",
+        "name": "증언+",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 24
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 증언+",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "누적: 자신과 전투 중인 적이 처치되었을 경우, 공격력이 20초 동안 2% 증가한다. 해당 효과는 최대 10회까지 중첩되며 지속 시간은 스택마다 개별로 가진다. 공격력이 24% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 24
+          },
+          "conditional": {
+            "trigger": "onKillStack",
+            "durationSec": 20,
+            "maxStacks": 10,
+            "perStack": {
+              "attackPct": 2
+            },
+            "stackDurationMode": "individual"
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_hero",
+        "name": "영웅",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 4.3,
+          "multiHitDamagePct": 4.3,
+          "strongHitDamagePct": 4.3,
+          "comboDamagePct": 4.3,
+          "skillDamagePct": 4.3,
+          "critDamagePct": 4.3
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 영웅",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "공격력이 4.3%, 연타 피해, 강타 피해, 콤보 피해, 스킬 피해, 치명타 피해, 멀티 히트 피해가 각각 4.3% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 4.3,
+            "multiHitDamagePct": 4.3,
+            "strongHitDamagePct": 4.3,
+            "comboDamagePct": 4.3,
+            "skillDamagePct": 4.3,
+            "critDamagePct": 4.3
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_tyrant",
+        "name": "폭군",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 폭군",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "전투 중, 1초마다 치명타 피해가 3.5%씩 증가한다. 이 효과는 최대 10회까지 중첩된다. 결함: 치명타 적중 시, 효과 중첩을 1 잃는다. 전투 시작 시, 10중첩을 즉시 획득한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "conditional": {
+            "trigger": "combatCritDamageStack",
+            "intervalSec": 1,
+            "maxStacks": 10,
+            "initialStacks": 10,
+            "perStack": {
+              "critDamagePct": 3.5
+            },
+            "flaw": {
+              "trigger": "onCriticalHit",
+              "loseStacks": 1
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_celestial_alignment",
+        "name": "천체 정렬",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 천체 정렬",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "누적: 전투 시, 천체 정렬 효과를 얻어 10초마다 공격력과 적에게 주는 피해가 3%씩 증가한다. 이 효과는 최대 6회까지 중첩된다. 최대 중첩에 도달할 경우 추가로 각 공격 시 선행 타격의 20%만큼 피해를 주는 추가 공격이 발생하며, 20초 뒤에 모든 중첩을 잃는다. 전투 시작 시, 2중첩을 즉시 획득한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "conditional": {
+            "trigger": "combatAlignmentStack",
+            "intervalSec": 10,
+            "maxStacks": 6,
+            "initialStacks": 2,
+            "perStack": {
+              "attackPct": 3,
+              "enemyDamagePct": 3
+            },
+            "atMaxStacks": {
+              "extraAttackPctOfPreviousHit": 20,
+              "loseAllAfterSec": 20
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_golden_insignia",
+        "name": "금빛 문장",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "enemyDamagePct": 20
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 금빛 문장",
+          "slot": "weapon",
+          "rarity": "legendary",
+          "rawDescription": "적에게 주는 피해가 20% 증가한다. 황금색 팔라딘 아티팩트를 착용하고 있을 경우, 추가로 공격력이 10% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "enemyDamagePct": 20
+          },
+          "conditional": {
+            "trigger": "artifactEquipped",
+            "artifact": "golden_paladin",
+            "effects": {
+              "attackPct": 10
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_ten_thousand_paths",
+        "name": "만 갈래 물길",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 15
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 만 갈래 물길",
+          "slot": "weapon",
+          "rarity": "mythic",
+          "rawDescription": "공격력이 15% 증가한다. 클래스 레벨 50을 달성할 때마다 추가로 공격력이 1%씩 증가하며 해당 효과는 최대 20회까지 중첩된다. 모든 클래스로 사용 가능하며, 캐릭터가 달성한 클래스 레벨 정보를 기준으로 효과 적용.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 15
+          },
+          "conditional": {
+            "trigger": "classLevelMilestone",
+            "levelStep": 50,
+            "maxStacks": 20,
+            "perStack": {
+              "attackPct": 1
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_white_raven",
+        "name": "흰 까마귀",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackSpeedPct": 10,
+          "moveSpeedPct": 10,
+          "skillSpeedPct": 10,
+          "castingSpeedPct": 10,
+          "chargeSpeedPct": 10,
+          "cooldownRecoveryPct": 10
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 흰 까마귀",
+          "slot": "weapon",
+          "rarity": "mythic",
+          "rawDescription": "공격, 이동, 스킬 사용 속도, 캐스팅 및 차지 속도, 재사용 대기 시간 회복 속도가 10% 증가한다. 장비를 +10 강화 시, 적에게 주는 피해가 7% 증가한다. 장비를 +15 강화 시, 공격력이 7% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackSpeedPct": 10,
+            "moveSpeedPct": 10,
+            "skillSpeedPct": 10,
+            "castingSpeedPct": 10,
+            "chargeSpeedPct": 10,
+            "cooldownRecoveryPct": 10
+          },
+          "conditional": {
+            "enhancement10": {
+              "enemyDamagePct": 7
+            },
+            "enhancement15": {
+              "attackPct": 7
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_echoing_wrath",
+        "name": "메아리치는 진노",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 5
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 메아리치는 진노",
+          "slot": "weapon",
+          "rarity": "mythic",
+          "rawDescription": "연타 적중 시, 전방 넓은 범위의 적들에게 55980의 피해와 17811의 지속 피해: 빙결을 준다. 강타 적중 시, 전방 넓은 범위의 적들에게 55980의 피해와 17811의 지속 피해: 화상을 준다. 또한, 공격력이 5% 증가한다. 장비를 +10, +15 강화 시 각각 공격력이 3% 추가로 증가한다. 재사용 대기 시간: 각 8초.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 5
+          },
+          "conditional": {
+            "multiHitTrigger": {
+              "damage": 55980,
+              "dotDamage": 17811,
+              "status": "빙결",
+              "cooldownSec": 8
+            },
+            "strongHitTrigger": {
+              "damage": 55980,
+              "dotDamage": 17811,
+              "status": "화상",
+              "cooldownSec": 8
+            },
+            "enhancement10": {
+              "attackPct": 3
+            },
+            "enhancement15": {
+              "attackPct": 3
+            }
+          }
+        }
+      },
+      {
+        "id": "weapon_s1_infinity",
+        "name": "무한",
+        "season": 1,
+        "tag": "시즌1",
+        "effects": {
+          "flatAttack": 723,
+          "attackPct": 20
+        },
+        "rawOption": {
+          "rawName": "무기 룬: 무한",
+          "slot": "weapon",
+          "rarity": "mythic",
+          "rawDescription": "기본 공격 사용 시, 모든 스킬의 재사용 대기 시간이 9% 감소한다. 공격력이 20% 증가하며, 스킬 사용 시 5초 동안 공격 속도가 12% 증가한다.",
+          "baseStats": {
+            "flatAttack": 723
+          },
+          "always": {
+            "attackPct": 20
+          },
+          "conditional": {
+            "basicAttack": {
+              "allSkillCooldownReductionPct": 9
+            },
+            "onSkillUse": {
+              "durationSec": 5,
+              "attackSpeedPct": 12
+            }
+          }
         }
       }
     ],

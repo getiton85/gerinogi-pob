@@ -1,4 +1,4 @@
-const POB = (() => {
+﻿const POB = (() => {
 const SLOT_CAT={emblem:"emblem",weapon:"weapon",head:"armor",top:"armor",bottom:"armor",gloves:"armor",shoes:"armor"};
 const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",shoes:""};
 const DEFAULT_STATS={attack:57582,defense:18542,breakPower:2914,strongStat:4957,comboStat:1532,skillPower:2729,areaPower:1412,recoveryPower:2468,weakpointDodge:1358,extraStat:2797,damageReduce:2998,fastAttack:2047,multiStat:1681,fastSkill:1757,extraHp:27183,ultimatePower:1366,critStat:8649,critDamageBase:300};
@@ -779,9 +779,9 @@ function validate(db){
   const missing=required.filter(id=>!ids.has(id));
   const result=[];
   result.push({name:"DB 중복 ID",pass:dup.length===0,detail:dup.length?dup.join(", "):"없음"});
-  result.push({name:"엠블럼 20개",pass:counts.emblem===20,detail:`${counts.emblem}개`});
-  result.push({name:"무기 45개",pass:counts.weapon===45,detail:`${counts.weapon}개`});
-  result.push({name:"방어구 55개",pass:counts.armor===55,detail:`${counts.armor}개`});
+  result.push({name:"엠블럼 기존 DB 보존",pass:counts.emblem>=20,detail:`${counts.emblem}개`});
+  result.push({name:"무기 기존 DB 보존",pass:counts.weapon>=45,detail:`${counts.weapon}개`});
+  result.push({name:"방어구 기존 DB 보존",pass:counts.armor>=55,detail:`${counts.armor}개`});
   result.push({name:"기본 장착 비움",pass:required.length===0,detail:required.length?required.join(", "):"무장착"});
   return{counts,dup,missing,result};
 }

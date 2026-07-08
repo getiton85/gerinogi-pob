@@ -197,6 +197,13 @@ body{overflow-x:hidden}
 .compare-slot{display:flex;flex-direction:column;gap:7px;background:#10151d;border:1px solid #303947;border-radius:12px;padding:10px;min-width:0}
 .compare-slot span{color:#cbd5e1;font-weight:1000;font-size:13px}
 .compare-slot select{width:100%;min-width:0;height:40px;background:#0f1722;color:#eef4ff;border:1px solid #354052;border-radius:10px;padding:7px 8px;font-weight:900}
+.compare-toggle{height:40px;margin:0}
+.compare-rune-menu{display:none;max-height:360px;overflow:auto;background:#0d121a;border:1px solid #303947;border-radius:12px;padding:6px}
+.compare-rune-menu.open{display:block}
+.compare-rune-choice.selected{border-color:#ff6a18;box-shadow:0 0 0 1px rgba(255,106,24,.45) inset}
+.compare-rune-menu::-webkit-scrollbar{width:8px}
+.compare-rune-menu::-webkit-scrollbar-thumb{background:#354052;border-radius:999px}
+.compare-rune-menu::-webkit-scrollbar-track{background:#10151d}
 .compare-grid{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:12px;align-items:stretch}
 .compare-card{background:#10151d;border:1px solid #303947;border-radius:14px;padding:12px;min-width:0}
 .compare-card h3{margin:0 0 10px;color:#ff7a2a;font-size:17px}

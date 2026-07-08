@@ -35,7 +35,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0018";
+if(appVersionEl)appVersionEl.textContent="v0.0020";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -384,17 +384,52 @@ function renderSkillDamage(){
 const COMPARE_SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
 function fmtCombat(v){const value=Math.max(0,Math.floor(n(v)));const eok=Math.floor(value/100000000);const man=Math.floor((value%100000000)/10000);if(eok&&man)return eok.toLocaleString()+"억 "+man.toLocaleString()+"만";if(eok)return eok.toLocaleString()+"억";if(man)return man.toLocaleString()+"만";return "1만 미만"}
 function ensureCompareSelection(){state.compareSelected=sanitizeSelection(state.compareSelected||state.selected)}
-function compareOptions(slot){
+function compareRows(slot){
   const cat=POB.SLOT_CAT[slot];
-  const noneDelta=slotDelta(slot,"");
-  const noneSelected=!state.compareSelected[slot]?"selected":"";
-  return [`<option value="" ${noneSelected}>없음 | ${deltaPctText(noneDelta.diff)}</option>`].concat((DB.runes[cat]||[]).map(r=>{
-    const selected=state.compareSelected[slot]===r.id?"selected":"";
-    const d=slotDelta(slot,r.id);
-    return `<option value="${r.id}" ${selected}>${seasonLabelText(r)} | ${r.name} | ${deltaPctText(d.diff)}</option>`;
-  })).join("");
+  const rows=[{r:{id:"",name:"없음",tag:""},d:slotDelta(slot,"")}].concat((DB.runes[cat]||[]).map(r=>({r,d:slotDelta(slot,r.id)})));
+  return rows.sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)));
 }
-function renderCompareEquip(){const root=document.getElementById("compareSlots");if(!root)return;ensureCompareSelection();root.innerHTML=Object.keys(COMPARE_SLOT_LABELS).map(slot=>`<label class="compare-slot"><span>${COMPARE_SLOT_LABELS[slot]}</span><select data-compare-slot="${slot}">${compareOptions(slot)}</select></label>`).join("");root.querySelectorAll("[data-compare-slot]").forEach(sel=>{sel.onchange=()=>{state.compareSelected[sel.dataset.compareSlot]=sel.value||"";renderComparison();save()}});const copyBtn=document.getElementById("copyCompareBtn");if(copyBtn)copyBtn.onclick=e=>{e.preventDefault();e.stopPropagation();state.compareSelected=JSON.parse(JSON.stringify(state.selected));renderCompareEquip();renderComparison();save()}}
+function compareChoiceButton(slot,r,d){
+  const selected=(state.compareSelected[slot]||"")===(r.id||"")?" selected":"";
+  return '<button type="button" class="compare-rune-choice rune-choice '+d.cls+selected+'" data-compare-slot="'+slot+'" data-rune="'+(r.id||"")+'">'+
+    '<span>'+seasonBadge(r)+r.name+'</span><b>'+d.label+'</b></button>';
+}
+function compareMenuHtml(slot){
+  return compareRows(slot).map(({r,d})=>compareChoiceButton(slot,r,d)).join("");
+}
+function renderCompareEquip(){
+  const root=document.getElementById("compareSlots");
+  if(!root)return;
+  ensureCompareSelection();
+  root.innerHTML=Object.keys(COMPARE_SLOT_LABELS).map(slot=>{
+    const current=runeByIdLocal(state.compareSelected[slot]);
+    const d=slotDelta(slot,state.compareSelected[slot]||"");
+    return '<div class="compare-slot" data-compare-wrap="'+slot+'"><span>'+COMPARE_SLOT_LABELS[slot]+'</span>'+
+      '<button type="button" class="compare-toggle rune-choice '+d.cls+'" data-compare-toggle="'+slot+'">'+
+      '<span>'+seasonBadge(current)+(current?current.name:"없음")+'</span><b>'+d.label+'</b></button>'+
+      '<div class="compare-rune-menu" id="compare_menu_'+slot+'">'+compareMenuHtml(slot)+'</div></div>';
+  }).join("");
+  root.querySelectorAll("[data-compare-toggle]").forEach(btn=>{
+    btn.onclick=()=>{
+      const slot=btn.dataset.compareToggle;
+      const menu=document.getElementById("compare_menu_"+slot);
+      if(!menu)return;
+      const willOpen=!menu.classList.contains("open");
+      root.querySelectorAll(".compare-rune-menu").forEach(m=>m.classList.remove("open"));
+      if(willOpen)menu.classList.add("open");
+    };
+  });
+  root.querySelectorAll(".compare-rune-choice").forEach(btn=>{
+    btn.onclick=()=>{
+      state.compareSelected[btn.dataset.compareSlot]=btn.dataset.rune||"";
+      renderCompareEquip();
+      renderComparison();
+      save();
+    };
+  });
+  const copyBtn=document.getElementById("copyCompareBtn");
+  if(copyBtn)copyBtn.onclick=e=>{e.preventDefault();e.stopPropagation();state.compareSelected=JSON.parse(JSON.stringify(state.selected));renderCompareEquip();renderComparison();save()}
+}
 function renderComparison(){const summaryBox=document.getElementById("compareSummary");const chart=document.getElementById("compareChart");if(!summaryBox&&!chart)return;ensureCompareSelection();const s=POB.comparisonSummary(DB,state,state.compareSelected,"avg");const compareNames=Object.keys(COMPARE_SLOT_LABELS).filter(slot=>state.selected[slot]!==state.compareSelected[slot]).map(slot=>{const r=runeByIdLocal(state.compareSelected[slot]);return `${COMPARE_SLOT_LABELS[slot]}: ${r?r.name:"없음"}`});if(summaryBox){summaryBox.innerHTML=[["밸류 차이",plusPct(s.valueDiffPct)],["DPS 차이",plusPct(s.dpsDiffPct)],["총 기대딜 차이",plusPct(s.totalDiffPct)],["현재 DPS",fmtCombat(s.current.combat.adjustedDpsScore)],["비교 DPS",fmtCombat(s.compare.combat.adjustedDpsScore)],["현재 총 기대딜",fmtCombat(s.current.combat.totalScore)],["비교 총 기대딜",fmtCombat(s.compare.combat.totalScore)],["현재 평균 가동률",pct(s.currentClass.averageUptime*100)],["비교 평균 가동률",pct(s.compareClass.averageUptime*100)],["바뀐 부위",compareNames.length?compareNames.join("<br>"):"없음"]].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}if(chart)drawCompareChart(chart,s)}
 function fmtChartDamage(v){
   const x=Math.max(0,Math.round(n(v)));
@@ -408,92 +443,71 @@ function fmtChartDamage(v){
 }
 function drawCompareChart(canvas,summary){
   const ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;
-  const timeline=POB.expectedDamageTimeline?POB.expectedDamageTimeline(summary):{current:[],compare:[],durationSec:summary.durationSec||60};
-  const current=timeline.current||[],compare=timeline.compare||[];
-  const all=current.concat(compare);
-  const duration=Math.max(10,n(timeline.durationSec)||60);
-  const maxDps=Math.max(1,...all.map(p=>n(p.dps)));
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle="#0f1722";
   ctx.fillRect(0,0,w,h);
-  const padL=72,padR=18,baseY=h-48,topY=28,chartW=w-padL-padR,chartH=baseY-topY;
+  const padL=58,padR=18,baseY=h-58,topY=36,chartW=w-padL-padR,chartH=baseY-topY;
+  const profile=POB.combatProfile?POB.combatProfile(state):(summary.currentClass&&summary.currentClass.profile)||{};
+  const slots=Object.keys(COMPARE_SLOT_LABELS);
+  function slotUptime(sel,slot){
+    const rune=runeByIdLocal(sel&&sel[slot]);
+    if(!rune)return {name:"없음",uptime:0,season:""};
+    const info=POB.classifyRune?POB.classifyRune(rune,profile):null;
+    return {
+      name:rune.name,
+      uptime:Math.max(0,Math.min(100,Math.round(n(info&&info.uptime)*100))),
+      season:POB.runeSeasonLabel?POB.runeSeasonLabel(rune):""
+    };
+  }
+  const rows=slots.map(slot=>({
+    slot,
+    label:COMPARE_SLOT_LABELS[slot],
+    current:slotUptime(state.selected,slot),
+    compare:slotUptime(state.compareSelected,slot)
+  }));
   ctx.strokeStyle="#26364a";
   ctx.lineWidth=1;
   ctx.font="12px system-ui";
   ctx.textAlign="right";
   for(let i=0;i<=4;i++){
     const y=baseY-chartH*i/4;
-    const label=fmtChartDamage(maxDps*i/4);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
-    ctx.fillStyle="#8fa0b5";ctx.fillText(label,padL-8,y+4);
+    ctx.fillStyle="#8fa0b5";ctx.fillText((i*25)+"%",padL-8,y+4);
   }
-  const axisStep=chartW>=980?10:chartW>=680?20:chartW>=460?30:60;
-  ctx.textAlign="center";
-  ctx.font="12px system-ui";
-  for(let t=0;t<=duration;t+=axisStep){
-    const x=padL+(t/duration)*chartW;
-    ctx.strokeStyle=t===0?"#34445a":"#1d2a3b";
-    ctx.beginPath();ctx.moveTo(x,topY);ctx.lineTo(x,baseY);ctx.stroke();
-    ctx.fillStyle="#dbe4ee";ctx.fillText(t+"초",x,baseY+24);
+  const groupW=chartW/Math.max(1,rows.length);
+  const barW=Math.max(14,Math.min(34,groupW*.24));
+  function drawBar(x,pct,color){
+    const fullH=chartH;
+    const fillH=fullH*pct/100;
+    ctx.fillStyle="#172231";
+    ctx.fillRect(x,topY,barW,fullH);
+    ctx.fillStyle=color;
+    ctx.fillRect(x,baseY-fillH,barW,fillH);
+    ctx.strokeStyle="#32445a";
+    ctx.strokeRect(x,topY,barW,fullH);
   }
-  if(duration%axisStep!==0){
-    const x=padL+chartW;
-    ctx.strokeStyle="#34445a";ctx.beginPath();ctx.moveTo(x,topY);ctx.lineTo(x,baseY);ctx.stroke();
-    ctx.fillStyle="#dbe4ee";ctx.fillText(Math.round(duration)+"초",x,baseY+24);
-  }
-  function avgDps(points){
-    return points.length?points.reduce((sum,p)=>sum+n(p.dps),0)/points.length:0;
-  }
-  function drawAverage(points,color,label){
-    const avg=avgDps(points);
-    if(!avg)return;
-    const y=baseY-(avg/maxDps)*chartH;
-    ctx.save();
-    ctx.setLineDash([6,5]);
-    ctx.strokeStyle=color;
-    ctx.globalAlpha=.55;
-    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
-    ctx.restore();
-    ctx.textAlign="left";ctx.font="11px system-ui";ctx.fillStyle=color;ctx.fillText(label+" 평균 "+fmtChartDamage(avg),padL+6,y-5);
-  }
-  function drawPeak(points,color,label){
-    if(!points.length)return;
-    let peak=points[0];
-    points.forEach(p=>{if(n(p.dps)>n(peak.dps))peak=p});
-    const x=padL+(n(peak.time)/duration)*chartW;
-    const y=baseY-(n(peak.dps)/maxDps)*chartH;
-    ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();
-    ctx.textAlign=x>padL+chartW*.72?"right":"left";
+  rows.forEach((row,i)=>{
+    const center=padL+groupW*(i+.5);
+    const x1=center-barW-4;
+    const x2=center+4;
+    drawBar(x1,row.current.uptime,"#94a3b8");
+    drawBar(x2,row.compare.uptime,"#ff6a18");
+    ctx.textAlign="center";
+    ctx.font="11px system-ui";
+    ctx.fillStyle="#dbe4ee";
+    ctx.fillText(row.current.uptime+"%",x1+barW/2,Math.max(topY+12,baseY-chartH*row.current.uptime/100-6));
+    ctx.fillStyle="#fff1e8";
+    ctx.fillText(row.compare.uptime+"%",x2+barW/2,Math.max(topY+12,baseY-chartH*row.compare.uptime/100-6));
+    ctx.fillStyle="#cbd5e1";
     ctx.font="12px system-ui";
-    ctx.fillText(label+" 최고 "+fmtChartDamage(peak.dps)+" / "+Math.round(n(peak.time))+"초",x+(ctx.textAlign==="right"?-8:8),Math.max(topY+14,y-8));
-  }
-  function plot(points,color){
-    if(points.length<2)return;
-    ctx.beginPath();
-    points.forEach((p,i)=>{
-      const x=padL+(n(p.time)/duration)*chartW;
-      const y=baseY-(n(p.dps)/maxDps)*chartH;
-      if(i===0){
-        ctx.moveTo(x,y);
-      }else{
-        const prev=points[i-1];
-        const prevY=baseY-(n(prev.dps)/maxDps)*chartH;
-        ctx.lineTo(x,prevY);
-        ctx.lineTo(x,y);
-      }
-    });
-    ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();
-  }
-  drawAverage(current,"#94a3b8","현재");
-  drawAverage(compare,"#ff6a18","비교");
-  plot(current,"#94a3b8");
-  plot(compare,"#ff6a18");
-  drawPeak(current,"#94a3b8","현재");
-  drawPeak(compare,"#ff6a18","비교");
+    ctx.fillText(row.label,center,baseY+24);
+  });
+  const currentAvg=Math.round(n(summary.currentClass&&summary.currentClass.averageUptime)*100);
+  const compareAvg=Math.round(n(summary.compareClass&&summary.compareClass.averageUptime)*100);
   ctx.textAlign="left";ctx.font="13px system-ui";
-  ctx.fillStyle="#94a3b8";ctx.fillText("현재 장착 곡선",padL,18);
-  ctx.fillStyle="#ff6a18";ctx.fillText("비교추가 곡선",padL+118,18);
-  ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText("초당 예상 DPS / 시간",w-150,18);
+  ctx.fillStyle="#94a3b8";ctx.fillText("현재 장착 평균 "+currentAvg+"%",padL,20);
+  ctx.fillStyle="#ff6a18";ctx.fillText("비교추가 평균 "+compareAvg+"%",padL+150,20);
+  ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText("장비 가동률 / 부위별 비교",w-160,20);
 }
 function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2+8,R=118,N=vals.length;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#334155";ctx.lineWidth=1;for(let ring=1;ring<=4;ring++){ctx.beginPath();for(let i=0;i<N;i++){const a=-Math.PI/2+i*2*Math.PI/N,r=R*ring/4,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}vals.forEach(([label],i)=>{const a=-Math.PI/2+i*2*Math.PI/N;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();ctx.fillStyle="#dbe4ee";ctx.font="13px system-ui";ctx.textAlign=Math.cos(a)>.2?"left":Math.cos(a)<-.2?"right":"center";ctx.fillText(label,cx+Math.cos(a)*(R+26),cy+Math.sin(a)*(R+26))});ctx.beginPath();vals.forEach(([_,v],i)=>{const a=-Math.PI/2+i*2*Math.PI/N,r=R*Math.max(0,Math.min(100,v))/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.closePath();ctx.fillStyle="rgba(255,106,24,.35)";ctx.strokeStyle="#ff6a18";ctx.lineWidth=3;ctx.fill();ctx.stroke()}
 function renderRank(){

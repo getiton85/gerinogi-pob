@@ -4,7 +4,7 @@
     {
       "name": "version marker",
       "pass": true,
-      "detail": "cache and visible version are v0.0015"
+      "detail": "cache and visible version are v0.0018"
     },
     {
       "name": "user season labels",
@@ -39,7 +39,7 @@
     {
       "name": "timeline has two curves",
       "pass": true,
-      "detail": "current 13 / compare 13"
+      "detail": "current 301 / compare 301"
     },
     {
       "name": "timeline duration follows raid",
@@ -54,7 +54,7 @@
     {
       "name": "timeline finite damage",
       "pass": true,
-      "detail": "[{\"time\":0,\"damage\":0,\"dps\":1632662.185765465,\"uptime\":1},{\"time\":25,\"damage\":45137419,\"dps\":1978331.337025323,\"uptime\":1}]"
+      "detail": "[{\"time\":0,\"damage\":0,\"dps\":2093156.6484172628,\"uptime\":1,\"activeBuffs\":0,\"rawFactor\":1},{\"time\":1,\"damage\":2093157,\"dps\":2093156.6484172628,\"uptime\":1,\"activeBuffs\":0,\"rawFactor\":1}]"
     },
     {
       "name": "chart labels changed",

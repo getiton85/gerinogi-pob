@@ -35,7 +35,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0017";
+if(appVersionEl)appVersionEl.textContent="v0.0018";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -411,6 +411,7 @@ function drawCompareChart(canvas,summary){
   const timeline=POB.expectedDamageTimeline?POB.expectedDamageTimeline(summary):{current:[],compare:[],durationSec:summary.durationSec||60};
   const current=timeline.current||[],compare=timeline.compare||[];
   const all=current.concat(compare);
+  const duration=Math.max(10,n(timeline.durationSec)||60);
   const maxDps=Math.max(1,...all.map(p=>n(p.dps)));
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle="#0f1722";
@@ -426,30 +427,69 @@ function drawCompareChart(canvas,summary){
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
     ctx.fillStyle="#8fa0b5";ctx.fillText(label,padL-8,y+4);
   }
+  const axisStep=chartW>=980?10:chartW>=680?20:chartW>=460?30:60;
+  ctx.textAlign="center";
+  ctx.font="12px system-ui";
+  for(let t=0;t<=duration;t+=axisStep){
+    const x=padL+(t/duration)*chartW;
+    ctx.strokeStyle=t===0?"#34445a":"#1d2a3b";
+    ctx.beginPath();ctx.moveTo(x,topY);ctx.lineTo(x,baseY);ctx.stroke();
+    ctx.fillStyle="#dbe4ee";ctx.fillText(t+"초",x,baseY+24);
+  }
+  if(duration%axisStep!==0){
+    const x=padL+chartW;
+    ctx.strokeStyle="#34445a";ctx.beginPath();ctx.moveTo(x,topY);ctx.lineTo(x,baseY);ctx.stroke();
+    ctx.fillStyle="#dbe4ee";ctx.fillText(Math.round(duration)+"초",x,baseY+24);
+  }
+  function avgDps(points){
+    return points.length?points.reduce((sum,p)=>sum+n(p.dps),0)/points.length:0;
+  }
+  function drawAverage(points,color,label){
+    const avg=avgDps(points);
+    if(!avg)return;
+    const y=baseY-(avg/maxDps)*chartH;
+    ctx.save();
+    ctx.setLineDash([6,5]);
+    ctx.strokeStyle=color;
+    ctx.globalAlpha=.55;
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
+    ctx.restore();
+    ctx.textAlign="left";ctx.font="11px system-ui";ctx.fillStyle=color;ctx.fillText(label+" 평균 "+fmtChartDamage(avg),padL+6,y-5);
+  }
+  function drawPeak(points,color,label){
+    if(!points.length)return;
+    let peak=points[0];
+    points.forEach(p=>{if(n(p.dps)>n(peak.dps))peak=p});
+    const x=padL+(n(peak.time)/duration)*chartW;
+    const y=baseY-(n(peak.dps)/maxDps)*chartH;
+    ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();
+    ctx.textAlign=x>padL+chartW*.72?"right":"left";
+    ctx.font="12px system-ui";
+    ctx.fillText(label+" 최고 "+fmtChartDamage(peak.dps)+" / "+Math.round(n(peak.time))+"초",x+(ctx.textAlign==="right"?-8:8),Math.max(topY+14,y-8));
+  }
   function plot(points,color){
     if(points.length<2)return;
     ctx.beginPath();
     points.forEach((p,i)=>{
-      const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
+      const x=padL+(n(p.time)/duration)*chartW;
       const y=baseY-(n(p.dps)/maxDps)*chartH;
-      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+      if(i===0){
+        ctx.moveTo(x,y);
+      }else{
+        const prev=points[i-1];
+        const prevY=baseY-(n(prev.dps)/maxDps)*chartH;
+        ctx.lineTo(x,prevY);
+        ctx.lineTo(x,y);
+      }
     });
     ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();
-    points.forEach((p,i)=>{
-      if(i%2&&i!==points.length-1)return;
-      const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
-      const y=baseY-(n(p.dps)/maxDps)*chartH;
-      ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();
-    });
   }
+  drawAverage(current,"#94a3b8","현재");
+  drawAverage(compare,"#ff6a18","비교");
   plot(current,"#94a3b8");
   plot(compare,"#ff6a18");
-  ctx.textAlign="center";
-  current.forEach((p,i)=>{
-    if(i%2&&i!==current.length-1)return;
-    const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
-    ctx.fillStyle="#dbe4ee";ctx.font="12px system-ui";ctx.fillText(Math.round(n(p.time))+"초",x,baseY+24);
-  });
+  drawPeak(current,"#94a3b8","현재");
+  drawPeak(compare,"#ff6a18","비교");
   ctx.textAlign="left";ctx.font="13px system-ui";
   ctx.fillStyle="#94a3b8";ctx.fillText("현재 장착 곡선",padL,18);
   ctx.fillStyle="#ff6a18";ctx.fillText("비교추가 곡선",padL+118,18);

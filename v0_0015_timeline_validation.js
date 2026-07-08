@@ -43,7 +43,7 @@ const missingSeason=allRunes.filter(r=>POB.runeSeasonLabel(r).indexOf("시즌")!
 const season2Missing=allRunes.filter(r=>r.season===2&&POB.runeSeasonLabel(r)!=="시즌2");
 
 const tests=[
-  assert("version marker",index.includes("v=0.0015")&&app.includes("v0.0015"),"cache and visible version are v0.0015"),
+  assert("version marker",index.includes("v=0.0018")&&app.includes("v0.0018"),"cache and visible version are v0.0018"),
   assert("user season labels",POB.runeSeasonLabel(weaponCandidate).includes("시즌")&&POB.runeSeasonLabel(emblemCandidate).includes("시즌"),`${POB.runeSeasonLabel(weaponCandidate)} / ${POB.runeSeasonLabel(emblemCandidate)}`),
   assert("no raw season label in compare options",!app.includes("[${season}]")&&!app.includes("[season2]"),"compare labels use Korean season text"),
   assert("compare option percent",app.includes("deltaPctText(d.diff)")&&app.includes("seasonLabelText(r)"),"compare dropdown includes season and delta percent"),
@@ -54,7 +54,7 @@ const tests=[
   assert("timeline duration follows raid",timeline.durationSec===300,"duration "+timeline.durationSec),
   assert("timeline monotonic damage",timeline.current.every((p,i,a)=>i===0||p.damage>=a[i-1].damage)&&timeline.compare.every((p,i,a)=>i===0||p.damage>=a[i-1].damage),"monotonic cumulative damage"),
   assert("timeline finite damage",timeline.current.concat(timeline.compare).every(p=>Number.isFinite(p.damage)&&Number.isFinite(p.time)&&Number.isFinite(p.dps)),JSON.stringify(timeline.current.slice(0,2))),
-  assert("chart labels changed",index.includes("시간별 예상 데미지")&&app.includes("현재 장착 곡선")&&app.includes("비교추가 곡선"),"time chart labels exist"),
+  assert("chart labels changed",index.includes("초당 예상 DPS")&&app.includes("현재 장착 곡선")&&app.includes("비교추가 곡선"),"time chart labels exist"),
   assert("compare css exists",css.includes(".compare-slots")&&css.includes("#compareChart"),"responsive compare styles exist")
 ];
 

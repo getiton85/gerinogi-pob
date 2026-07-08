@@ -1,0 +1,33 @@
+{
+  "pass": true,
+  "tests": [
+    {
+      "name": "version marker updated",
+      "pass": true
+    },
+    {
+      "name": "x-axis uses adaptive time ticks",
+      "pass": true
+    },
+    {
+      "name": "per-second labels are not drawn for every point",
+      "pass": true
+    },
+    {
+      "name": "step-line chart shows buff windows",
+      "pass": true
+    },
+    {
+      "name": "average and peak helpers are present",
+      "pass": true
+    },
+    {
+      "name": "timeline data still has one-second DPS points",
+      "pass": true
+    },
+    {
+      "name": "core regression self test",
+      "pass": true
+    }
+  ]
+}

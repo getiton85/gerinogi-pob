@@ -46,7 +46,7 @@ function uniq(values){
 const currentDps=timeline.current.map(p=>p.dps);
 const compareDps=timeline.compare.map(p=>p.dps);
 const tests=[
-  {name:"version marker updated",pass:index.includes("v0.0017")&&app.includes("v0.0017")},
+  {name:"version marker updated",pass:/v0\.001[78]/.test(index)&&/v0\.001[78]/.test(app)},
   {name:"timeline exposes one-second raid points",pass:timeline.durationSec===300&&timeline.current.length===301&&timeline.compare.length===301},
   {name:"buff windows create changing DPS",pass:uniq(currentDps).length>=3&&uniq(compareDps).length>=3},
   {name:"downtime windows are visible",pass:timeline.current.some(p=>p.time>=50&&p.time<=60&&Math.round(p.dps)===0)},

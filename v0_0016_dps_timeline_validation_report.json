@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "tests": [
+    {
+      "name": "version marker",
+      "pass": true,
+      "detail": "cache and visible version are v0.0018"
+    },
+    {
+      "name": "chart title",
+      "pass": true,
+      "detail": "chart title is DPS-based"
+    },
+    {
+      "name": "chart uses dps axis",
+      "pass": true,
+      "detail": "canvas plots per-second expected DPS"
+    },
+    {
+      "name": "chart keeps two curves",
+      "pass": true,
+      "detail": "current and comparison legends exist"
+    },
+    {
+      "name": "timeline exports dps",
+      "pass": true,
+      "detail": "timeline points contain finite dps"
+    },
+    {
+      "name": "timeline keeps cumulative damage for summary",
+      "pass": true,
+      "detail": "damage remains available"
+    },
+    {
+      "name": "raid duration",
+      "pass": true,
+      "detail": "duration 300"
+    },
+    {
+      "name": "season labels",
+      "pass": true,
+      "detail": "시즌1 / 시즌0"
+    }
+  ]
+}

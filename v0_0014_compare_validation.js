@@ -37,7 +37,7 @@ const app=fs.readFileSync(path.join(__dirname,"app.js"),"utf8");
 const css=fs.readFileSync(path.join(__dirname,"style.css"),"utf8");
 
 const tests=[
-  assert("version marker",index.includes("v=0.0014")&&app.includes("v0.0014"),"cache and visible version are v0.0014"),
+  assert("version marker",index.includes("v=0.0018")&&app.includes("v0.0018"),"cache and visible version are v0.0018"),
   assert("compare ui mounted",index.includes("compareSlots")&&index.includes("compareChart")&&index.includes("copyCompareBtn"),"compare panel ids exist"),
   assert("compare renderer wired",app.includes("renderCompareEquip")&&app.includes("renderComparison")&&app.includes("drawCompareChart"),"renderer functions exist"),
   assert("compare css exists",css.includes(".compare-slots")&&css.includes("#compareChart"),"responsive compare styles exist"),

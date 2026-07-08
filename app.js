@@ -35,7 +35,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0015";
+if(appVersionEl)appVersionEl.textContent="v0.0017";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -411,7 +411,7 @@ function drawCompareChart(canvas,summary){
   const timeline=POB.expectedDamageTimeline?POB.expectedDamageTimeline(summary):{current:[],compare:[],durationSec:summary.durationSec||60};
   const current=timeline.current||[],compare=timeline.compare||[];
   const all=current.concat(compare);
-  const maxDamage=Math.max(1,...all.map(p=>n(p.damage)));
+  const maxDps=Math.max(1,...all.map(p=>n(p.dps)));
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle="#0f1722";
   ctx.fillRect(0,0,w,h);
@@ -422,7 +422,7 @@ function drawCompareChart(canvas,summary){
   ctx.textAlign="right";
   for(let i=0;i<=4;i++){
     const y=baseY-chartH*i/4;
-    const label=fmtChartDamage(maxDamage*i/4);
+    const label=fmtChartDamage(maxDps*i/4);
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
     ctx.fillStyle="#8fa0b5";ctx.fillText(label,padL-8,y+4);
   }
@@ -431,14 +431,14 @@ function drawCompareChart(canvas,summary){
     ctx.beginPath();
     points.forEach((p,i)=>{
       const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
-      const y=baseY-(n(p.damage)/maxDamage)*chartH;
+      const y=baseY-(n(p.dps)/maxDps)*chartH;
       if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
     });
     ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();
     points.forEach((p,i)=>{
       if(i%2&&i!==points.length-1)return;
       const x=padL+(n(p.time)/(timeline.durationSec||60))*chartW;
-      const y=baseY-(n(p.damage)/maxDamage)*chartH;
+      const y=baseY-(n(p.dps)/maxDps)*chartH;
       ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();
     });
   }
@@ -453,7 +453,7 @@ function drawCompareChart(canvas,summary){
   ctx.textAlign="left";ctx.font="13px system-ui";
   ctx.fillStyle="#94a3b8";ctx.fillText("현재 장착 곡선",padL,18);
   ctx.fillStyle="#ff6a18";ctx.fillText("비교추가 곡선",padL+118,18);
-  ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText("누적 예상딜 / 시간",w-132,18);
+  ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText("초당 예상 DPS / 시간",w-150,18);
 }
 function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2+8,R=118,N=vals.length;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#334155";ctx.lineWidth=1;for(let ring=1;ring<=4;ring++){ctx.beginPath();for(let i=0;i<N;i++){const a=-Math.PI/2+i*2*Math.PI/N,r=R*ring/4,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}vals.forEach(([label],i)=>{const a=-Math.PI/2+i*2*Math.PI/N;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();ctx.fillStyle="#dbe4ee";ctx.font="13px system-ui";ctx.textAlign=Math.cos(a)>.2?"left":Math.cos(a)<-.2?"right":"center";ctx.fillText(label,cx+Math.cos(a)*(R+26),cy+Math.sin(a)*(R+26))});ctx.beginPath();vals.forEach(([_,v],i)=>{const a=-Math.PI/2+i*2*Math.PI/N,r=R*Math.max(0,Math.min(100,v))/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.closePath();ctx.fillStyle="rgba(255,106,24,.35)";ctx.strokeStyle="#ff6a18";ctx.lineWidth=3;ctx.fill();ctx.stroke()}
 function renderRank(){

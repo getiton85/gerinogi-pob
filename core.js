@@ -547,6 +547,15 @@ function classifyRune(rune,profile){
     id:rune&&rune.id||"",
     name:rune&&rune.name||"없음",
     season:runeSeasonLabel(rune),
+    rawOption:rune&&rune.rawOption||{},
+    effects:rune&&rune.effects||{},
+    conditionalAlways:rune&&rune.conditionalAlways||{},
+    directDps:n(rune&&rune.directDps),
+    periodicDps:n(rune&&rune.periodicDps),
+    directDamage:rune&&rune.directDamage||null,
+    nightBlessing:rune&&rune.nightBlessing||null,
+    dragonSeal:rune&&rune.dragonSeal||null,
+    erosion:rune&&rune.erosion||null,
     effectTags:effectTagsForRune(rune),
     conditionTags:conditionTagsForRune(rune),
     uptime,
@@ -577,28 +586,157 @@ function comparisonSummary(db,state,compareSel=state.compareSelected||state.sele
     valueDiffPct:compare.valueScore-current.valueScore,
     dpsDiffPct:(compare.combat.adjustedDpsScore/dpsBase*100)-100,
     totalDiffPct:(compare.combat.totalScore/totalBase*100)-100,
-    durationSec:combatDurationSec(state)
+    durationSec:combatDurationSec(state),
+    env:{...(state&&state.env||{})}
   };
 }
 
-function damageTimelinePoints(calc,classInfo,durationSec){
+function timelineConditionList(raw){
+  if(!raw||typeof raw!=="object")return[];
+  const list=[];
+  const addCond=v=>{
+    if(!v)return;
+    if(Array.isArray(v))v.forEach(addCond);
+    else if(typeof v==="object")list.push(v);
+  };
+  addCond(raw.conditional);
+  addCond(raw.conditionals);
+  return list;
+}
+
+function timelineEffectPct(e){
+  if(!e||typeof e!=="object")return 0;
+  let pct=0;
+  const full=["attackPct","damagePct","enemyDamagePct","targetIncomingDamageIncreasePct","damageToEnemyPct","finalDamagePct","unarmoredDamagePct","defenseBreakDamagePct","dotDamagePct","basicDamagePct","basicAttackDamagePct"];
+  const partial=[
+    ["skillDamagePct",0.45],["ultimateSkillDamagePct",0.45],["castingSkillDamagePct",0.45],["chargeSkillDamagePct",0.45],["channelingSkillDamagePct",0.45],["breakSkillDamagePct",0.45],
+    ["strongHitDamagePct",0.35],["multiHitDamagePct",0.28],["critDamagePct",0.32],["critChancePct",0.42],["extraHitChancePct",0.38],["followUpDamagePct",0.35],
+    ["attackSpeedPct",0.08],["skillSpeedPct",0.08],["castingSpeedPct",0.08],["chargeSpeedPct",0.08],["cooldownRecoveryPct",0.06]
+  ];
+  full.forEach(k=>{pct+=n(e[k])});
+  partial.forEach(([k,w])=>{pct+=n(e[k])*w});
+  return pct;
+}
+
+function timelineEventImpact(cond,baseDps){
+  let pct=timelineEffectPct(cond&&cond.effects);
+  const stackPct=timelineEffectPct(cond&&cond.effectsPerStack);
+  if(stackPct){
+    const maxStacks=n(cond.maxStacks)||n(cond.stackMax)||n(cond.maximumStacks)||3;
+    pct+=stackPct*Math.max(1,Math.min(10,maxStacks));
+  }
+  pct+=timelineEffectPct(cond&&cond.effectsWhileActive);
+  pct+=timelineEffectPct(cond&&cond.effectsByTrigger);
+  pct+=timelineEffectPct(cond&&cond.effectsByFamily);
+  const direct=n(cond&&cond.directDamage)||n(cond&&cond.damage)||n(cond&&cond.nextHitDamage);
+  if(direct&&baseDps){
+    const interval=Math.max(0.5,n(cond.procIntervalSec)||n(cond.periodicIntervalSec)||n(cond.cooldownSec)||5);
+    pct+=Math.min(45,(direct/interval)/Math.max(1,baseDps)*100);
+  }
+  return Math.max(0,pct);
+}
+
+function timelinePeriodSec(cond,env){
+  const type=String(cond&&cond.type||"").toLowerCase();
+  const trigger=String(cond&&cond.trigger||"").toLowerCase();
+  const cooldown=n(cond&&cond.cooldownSec);
+  if(type.includes("night")||trigger.includes("밤의 축복"))return 60;
+  if(type.includes("ultimate")||trigger.includes("궁극"))return Math.max(45,n(env&&env.ultimateCycleSec)||75);
+  if(cooldown>1)return cooldown;
+  if(cooldown>0)return Math.max(5,n(cond&&cond.durationSec)||cooldown);
+  if(trigger.includes("전투 시작"))return 999999;
+  if(trigger.includes("기본 공격"))return Math.max(1,n(env&&env.basicDelay)||1);
+  if(trigger.includes("스킬"))return Math.max(2,n(env&&env.skillCycle)||2.5);
+  return 10;
+}
+
+function timelineStartOffsetSec(cond){
+  const type=String(cond&&cond.type||"").toLowerCase();
+  const trigger=String(cond&&cond.trigger||"").toLowerCase();
+  if(type.includes("attackawakening")||trigger.includes("50%"))return 2;
+  if(trigger.includes("5회")||trigger.includes("8회"))return 4;
+  if(trigger.includes("20회"))return 10;
+  return 0;
+}
+
+function timelineEventActive(cond,t,env){
+  const duration=Math.max(0,n(cond&&cond.durationSec)||n(cond&&cond.effects&&cond.effects.durationSec));
+  if(!duration)return false;
+  const period=timelinePeriodSec(cond,env);
+  const start=timelineStartOffsetSec(cond);
+  if(period>=999999)return t>=start&&t<start+duration;
+  if(t<start)return false;
+  return ((t-start)%period)<Math.min(duration,period);
+}
+
+function timelineSpecialFactor(rune,t,env){
+  let pct=0;
+  if(rune&&rune.nightBlessing){
+    if((t%60)<15)pct+=timelineEffectPct(rune.nightBlessing);
+  }
+  if(rune&&rune.dragonSeal){
+    if((t%20)<10)pct+=timelineEffectPct(rune.dragonSeal);
+  }
+  if(rune&&rune.erosion){
+    const p=t%75;
+    if(p<60)pct+=timelineEffectPct(rune.erosion)*(p>=20?2:1);
+  }
+  if(rune&&rune.directDamage){
+    const damage=n(rune.directDamage.damage);
+    const interval=Math.max(0.5,n(rune.directDamage.intervalSec)||(n(env&&env.skillCycle)+n(env&&env.basicDelay))||5);
+    if(damage)pct+=Math.min(35,(damage/interval)/100000*100);
+  }
+  return pct;
+}
+
+function isCombatDowntime(t,profile){
+  if(!profile||!profile.downtimeSec||!profile.windowSec)return false;
+  const p=t%profile.windowSec;
+  return p>=profile.windowSec-profile.downtimeSec;
+}
+
+function timelineRawFactor(classInfo,t,baseDps,env){
+  const runes=classInfo&&classInfo.runes||[];
+  let pct=0,active=0;
+  for(const rune of runes){
+    const conditions=timelineConditionList(rune&&rune.rawOption);
+    for(const cond of conditions){
+      if(timelineEventActive(cond,t,env)){
+        pct+=timelineEventImpact(cond,baseDps);
+        active++;
+      }
+    }
+    const special=timelineSpecialFactor(rune,t,env);
+    if(special){pct+=special;active++}
+  }
+  return {factor:Math.max(0.05,1+pct/100),activeBuffs:active};
+}
+
+function damageTimelinePoints(calc,classInfo,durationSec,env){
   const duration=Math.max(10,n(durationSec)||60);
-  const steps=12;
+  const steps=Math.max(10,Math.round(duration));
   const combat=calc&&calc.combat?calc.combat:{};
   const dps=Math.max(0,n(combat.adjustedDpsScore)||n(calc&&calc.score)||0);
   const uptime=clamp(classInfo&&classInfo.averageUptime!==undefined?classInfo.averageUptime:1,0.05,1);
-  const rampSec=Math.max(5,duration*(0.06+(1-uptime)*0.3));
-  const points=[];
-  let total=0,lastT=0,lastDps=dps*(0.78+0.22*(1-Math.exp(0)));
+  const profile=classInfo&&classInfo.profile||{durationSec:duration,windowSec:60,downtimeSec:0};
+  const factors=[];
   for(let i=0;i<=steps;i++){
     const t=duration*i/steps;
-    const activeRamp=0.78+0.22*(1-Math.exp(-t/rampSec));
-    const effectiveDps=dps*activeRamp;
+    const raw=timelineRawFactor(classInfo,t,dps,env);
+    factors.push({...raw,time:t});
+  }
+  const activeFactors=factors.filter(p=>!isCombatDowntime(p.time,profile));
+  const avgFactor=(activeFactors.length?activeFactors:factors).reduce((sum,p)=>sum+p.factor,0)/Math.max(1,(activeFactors.length?activeFactors:factors).length);
+  const points=[];
+  let total=0,lastT=0,lastDps=isCombatDowntime(0,profile)?0:dps*(factors[0].factor/Math.max(0.05,avgFactor));
+  for(let i=0;i<=steps;i++){
+    const t=factors[i].time;
+    const effectiveDps=isCombatDowntime(t,profile)?0:dps*(factors[i].factor/Math.max(0.05,avgFactor));
     if(i>0){
       const dt=t-lastT;
       total+=((lastDps+effectiveDps)/2)*dt;
     }
-    points.push({time:t,damage:Math.round(total),dps:effectiveDps,uptime});
+    points.push({time:t,damage:Math.round(total),dps:effectiveDps,uptime,activeBuffs:factors[i].activeBuffs,rawFactor:factors[i].factor});
     lastT=t;
     lastDps=effectiveDps;
   }
@@ -609,8 +747,8 @@ function expectedDamageTimeline(summary){
   const duration=Math.max(10,n(summary&&summary.durationSec)||60);
   return {
     durationSec:duration,
-    current:damageTimelinePoints(summary&&summary.current,summary&&summary.currentClass,duration),
-    compare:damageTimelinePoints(summary&&summary.compare,summary&&summary.compareClass,duration)
+    current:damageTimelinePoints(summary&&summary.current,summary&&summary.currentClass,duration,summary&&summary.env),
+    compare:damageTimelinePoints(summary&&summary.compare,summary&&summary.compareClass,duration,summary&&summary.env)
   };
 }
 

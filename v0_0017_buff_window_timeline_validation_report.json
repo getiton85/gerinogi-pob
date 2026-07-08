@@ -1,0 +1,297 @@
+{
+  "pass": true,
+  "tests": [
+    {
+      "name": "version marker updated",
+      "pass": true
+    },
+    {
+      "name": "timeline exposes one-second raid points",
+      "pass": true
+    },
+    {
+      "name": "buff windows create changing DPS",
+      "pass": true
+    },
+    {
+      "name": "downtime windows are visible",
+      "pass": true
+    },
+    {
+      "name": "active buff metadata exists",
+      "pass": true
+    },
+    {
+      "name": "current and compare curves can differ",
+      "pass": true
+    },
+    {
+      "name": "cumulative damage remains available",
+      "pass": true
+    },
+    {
+      "name": "graph still labels per-second DPS",
+      "pass": true
+    },
+    {
+      "name": "timeline functions exported",
+      "pass": true
+    }
+  ],
+  "sample": {
+    "first": [
+      {
+        "time": 0,
+        "damage": 0,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 4,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 1,
+        "damage": 3417942,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 4,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 2,
+        "damage": 6835883,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 4,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 3,
+        "damage": 10253825,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 4,
+        "damage": 13671766,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 5,
+        "damage": 17089708,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 6,
+        "damage": 20507649,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 7,
+        "damage": 23925591,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      }
+    ],
+    "downtime": [
+      {
+        "time": 48,
+        "damage": 109319661,
+        "dps": 1783865.9149367712,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 49,
+        "damage": 111103527,
+        "dps": 1783865.9149367712,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 50,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 51,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 52,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 53,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 54,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 55,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 56,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 57,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 58,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 59,
+        "damage": 111995460,
+        "dps": 0,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 1,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 60,
+        "damage": 113704430,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 61,
+        "damage": 117122372,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      },
+      {
+        "time": 62,
+        "damage": 120540314,
+        "dps": 3417941.5622070953,
+        "uptime": 0.7000000000000001,
+        "activeBuffs": 3,
+        "rawFactor": 2.008
+      }
+    ],
+    "compareFirst": [
+      {
+        "time": 0,
+        "damage": 0,
+        "dps": 2056358.2405726393,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 1,
+        "damage": 2056358,
+        "dps": 2056358.2405726393,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.048
+      },
+      {
+        "time": 2,
+        "damage": 4613071,
+        "dps": 3057066.9263474923,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 3,
+        "rawFactor": 1.5579999999999998
+      },
+      {
+        "time": 3,
+        "damage": 7670138,
+        "dps": 3057066.9263474923,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.5579999999999998
+      },
+      {
+        "time": 4,
+        "damage": 10727205,
+        "dps": 3057066.9263474923,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.5579999999999998
+      },
+      {
+        "time": 5,
+        "damage": 13784272,
+        "dps": 3057066.9263474923,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.5579999999999998
+      },
+      {
+        "time": 6,
+        "damage": 16841339,
+        "dps": 3057066.9263474923,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.5579999999999998
+      },
+      {
+        "time": 7,
+        "damage": 19898405,
+        "dps": 3057066.9263474923,
+        "uptime": 0.4733333333333334,
+        "activeBuffs": 2,
+        "rawFactor": 1.5579999999999998
+      }
+    ]
+  }
+}

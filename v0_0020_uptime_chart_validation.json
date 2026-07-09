@@ -1,16 +1,16 @@
 {
-  "version": "v0.0020",
-  "generatedAt": "2026-07-08T22:54:13.155Z",
+  "version": "v0.0023",
+  "generatedAt": "2026-07-09T12:01:16.323Z",
   "checks": [
     {
       "name": "version display",
       "status": "PASS",
-      "detail": "index/app version should be v0.0020"
+      "detail": "index/app version should be v0.0023"
     },
     {
       "name": "cache busting",
       "status": "PASS",
-      "detail": "script query strings should be v0.0020"
+      "detail": "script query strings should be v0.0023"
     },
     {
       "name": "chart title",
@@ -35,7 +35,7 @@
     {
       "name": "season1 armor imported",
       "status": "PASS",
-      "detail": "season1 armor count 53"
+      "detail": "season1 armor count 59"
     },
     {
       "name": "existing armor preserved",
@@ -50,12 +50,12 @@
     {
       "name": "comparison percent sort",
       "status": "PASS",
-      "detail": "창백한 기수:46.91, 무수한 궤적:40.85, 대군주+:39.72, 바위 칼날:38.75, 억눌린 충동:38.58"
+      "detail": "창백한 기수:46.91, 대군주+:39.72, 바위 칼날:38.75, 억눌린 충동:38.58, 죽음:35.32"
     },
     {
       "name": "core self test",
       "status": "PASS",
-      "detail": "[{\"name\":\"DB 중복 ID\",\"pass\":true,\"detail\":\"없음\"},{\"name\":\"엠블럼 기존 DB 보존\",\"pass\":true,\"detail\":\"20개\"},{\"name\":\"무기 기존 DB 보존\",\"pass\":true,\"detail\":\"45개\"},{\"name\":\"방어구 기존 DB 보존\",\"pass\":true,\"detail\":\"108개\"},{\"name\":\"기본 장착 비움\",\"pass\":true,\"detail\":\"무장착\"},{\"name\":\"평균 점수 산출\",\"pass\":true,\"detail\":\"2,350,887\"},{\"name\":\"패시브 ON/OFF 반응\",\"pass\":true,\"detail\":\"ON 2350887 / OFF 249405\"},{\"name\":\"어비스/레이드 모드 반응\",\"pass\":true,\"detail\":\"레이드 2690428 / 어비스 2986497\"},{\"name\":\"레이드 5분 / 어비스 1분 전투시간 반영\",\"pass\":true,\"detail\":\"레이드 5분 300초 / 어비스 1분 60초\"},{\"name\":\"직접DPS 산출\",\"pass\":true,\"detail\":\"1,128\"},{\"name\":\"두 번째 스탯창 대시보드 반영\",\"pass\":true,\"detail\":\"기준 2350887 / 변경 2485183\"},{\"name\":\"밸류점수 100 기준 정규화\",\"pass\":true,\"detail\":\"기준 세팅 100.00\"},{\"name\":\"고밸류 스탯 보정 적용\",\"pass\":true,\"detail\":\"공격 1.08 / 치명 1.18 / 추가타 1.15 / 치피 1.12\"},{\"name\":\"속도/쿨감/회복 직접 밸류 제외\",\"pass\":true,\"detail\":\"기준 100.00 / 유틸 100.00\"},{\"name\":\"밤의 축복 평균 유지율 25%\",\"pass\":true,\"detail\":\"평균 0.25\"},{\"name\":\"스킬 예상 데미지 산출\",\"pass\":true,\"detail\":\"9개 스킬\"}]"
+      "detail": "[{\"name\":\"DB 중복 ID\",\"pass\":true,\"detail\":\"없음\"},{\"name\":\"엠블럼 기존 DB 보존\",\"pass\":true,\"detail\":\"20개\"},{\"name\":\"무기 기존 DB 보존\",\"pass\":true,\"detail\":\"45개\"},{\"name\":\"방어구 기존 DB 보존\",\"pass\":true,\"detail\":\"114개\"},{\"name\":\"기본 장착 비움\",\"pass\":true,\"detail\":\"무장착\"},{\"name\":\"평균 점수 산출\",\"pass\":true,\"detail\":\"2,350,887\"},{\"name\":\"패시브 ON/OFF 반응\",\"pass\":true,\"detail\":\"ON 2350887 / OFF 249405\"},{\"name\":\"어비스/레이드 모드 반응\",\"pass\":true,\"detail\":\"레이드 2690428 / 어비스 2986497\"},{\"name\":\"레이드 5분 / 어비스 1분 전투시간 반영\",\"pass\":true,\"detail\":\"레이드 5분 300초 / 어비스 1분 60초\"},{\"name\":\"직접DPS 산출\",\"pass\":true,\"detail\":\"1,128\"},{\"name\":\"두 번째 스탯창 대시보드 반영\",\"pass\":true,\"detail\":\"기준 2350887 / 변경 2485183\"},{\"name\":\"밸류점수 100 기준 정규화\",\"pass\":true,\"detail\":\"기준 세팅 100.00\"},{\"name\":\"고밸류 스탯 보정 적용\",\"pass\":true,\"detail\":\"공격 1.08 / 치명 1.18 / 추가타 1.15 / 치피 1.12\"},{\"name\":\"속도/쿨감/회복 직접 밸류 제외\",\"pass\":true,\"detail\":\"기준 100.00 / 유틸 100.00\"},{\"name\":\"밤의 축복 평균 유지율 25%\",\"pass\":true,\"detail\":\"평균 0.25\"},{\"name\":\"스킬 예상 데미지 산출\",\"pass\":true,\"detail\":\"9개 스킬\"}]"
     }
   ]
 }

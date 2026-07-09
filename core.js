@@ -28,6 +28,8 @@ const VALUE_WEIGHTS={
 
 const NON_DAMAGE_VALUE_EFFECT_KEYS=new Set([
   "attackSpeedPct",
+  "basicAttackSpeedPct",
+  "normalAttackSpeedPct",
   "skillSpeedPct",
   "castingSpeedPct",
   "chargeSpeedPct",
@@ -35,7 +37,13 @@ const NON_DAMAGE_VALUE_EFFECT_KEYS=new Set([
   "allSkillCooldownReductionSec",
   "recoveryPct",
   "healingReceivedPct",
-  "healFlat"
+  "healFlat",
+  "basicDamagePct",
+  "basicAttackDamagePct",
+  "basicExtraHitChancePct",
+  "basicExtraHitChance",
+  "normalAttackDamagePct",
+  "baseAttackDamagePct"
 ]);
 
 function n(v){return Number(v)||0}
@@ -54,18 +62,19 @@ function runeText(r){
 function tagEffectScore(tag,e,text){
   const t=String(text||"").toLowerCase();
   const has=(...words)=>words.some(w=>t.includes(String(w).toLowerCase()));
+  const isBasicAttackText=has("기본 공격","기본공격","basic attack");
   let score=0;
   if(tag==="strong")score+=n(e.strongHitDamagePct)/18+has("강타","strong")*0.8;
   if(tag==="multi")score+=n(e.multiHitDamagePct)/18+has("연타","multi")*0.8;
   if(tag==="interrupt")score+=n(e.targetIncomingDamageIncreasePct)/20+n(e.unarmoredDamagePct)/22+n(e.defenseBreakDamagePct)/22+has("방어구 파괴","무방비","침식","방해")*0.5;
   if(tag==="support")score+=n(e.skillDamagePct)/28+n(e.cooldownRecoveryPct)/30+n(e.allSkillCooldownReductionSec)/8+n(e.ultimateGaugeGainPct)/25+has("보조","재사용","회복 속도")*0.45;
-  if(tag==="move")score+=n(e.moveSpeedPct)/15+n(e.attackSpeedPct)/24+n(e.skillSpeedPct)/24+n(e.castingSpeedPct)/24+n(e.chargeSpeedPct)/24+has("이동","속도")*0.35;
+  if(tag==="move")score+=n(e.moveSpeedPct)/15+n(e.skillSpeedPct)/24+n(e.castingSpeedPct)/24+n(e.chargeSpeedPct)/24+has("이동","스킬 사용 속도","캐스팅","차지")*0.35;
   if(tag==="survival")score+=n(e.damageReducePct)/12+n(e.healingReceivedPct)/18+has("받는 피해","체력","회복","생존")*0.45;
   if(tag==="element")score+=n(e.damagePct)/60+n(e.enemyDamagePct)/60+has("화상","빙결","감전","중독","상처","어둠","빛","불","번개","얼음","원소")*0.55;
   if(tag==="summon")score+=has("소환","문장","마력의 원","화염 지대","용의 문장")*0.75;
   if(tag==="crit")score+=n(e.critChancePct)/10+n(e.critDamagePct)/28+has("치명타","치명")*0.55;
-  if(tag==="extra")score+=n(e.extraHitChancePct)/10+has("추가타")*0.75;
-  if(tag==="attack")score+=n(e.attackPct)/14+n(e.flatAttack)/3500+has("공격력")*0.45;
+  if(tag==="extra")score+=n(e.extraHitChancePct)/10+(!isBasicAttackText&&has("추가타"))*0.75;
+  if(tag==="attack")score+=n(e.attackPct)/14+n(e.flatAttack)/3500+(!isBasicAttackText&&has("공격력"))*0.45;
   if(tag==="healing")score+=n(e.recoveryPct)/18+n(e.healingReceivedPct)/14+has("힐","회복량","회복")*0.6;
   if(tag==="break")score+=n(e.breakSkillDamagePct)/18+n(e.unarmoredDamagePct)/24+n(e.targetIncomingDamageIncreasePct)/24+has("브레이크","무방비","방어구 파괴")*0.65;
   return Math.max(0,Math.min(3,score));
@@ -252,7 +261,7 @@ function calc(db,state,sel=state.selected,kind="avg"){
   const finalDamage=n(effects.finalDamagePct);
   const galeDamage=n(effects.galePostureDamagePct);
   const skillDamage=n(effects.skillDamagePct)+n(effects.ultimateSkillDamagePct)+n(effects.castingSkillDamagePct)+n(effects.chargeSkillDamagePct)+n(effects.channelingSkillDamagePct)+n(effects.breakSkillDamagePct)+n(effects.resourceConsumingSkillDamagePct)+n(effects.activeSlot3SkillDamagePct);
-  const speedBonus=n(effects.attackSpeedPct)+n(effects.skillSpeedPct)+n(effects.castingSpeedPct)+n(effects.chargeSpeedPct)+n(effects.cooldownRecoveryPct)+n(base.fastAttackPct)*0.10+n(base.fastSkillPct)*0.10;
+  const speedBonus=n(effects.skillSpeedPct)+n(effects.castingSpeedPct)+n(effects.chargeSpeedPct)+n(effects.cooldownRecoveryPct)+n(base.fastSkillPct)*0.10;
   const utilityBonus=n(base.breakPct)*0.03+n(base.comboPct)*0.02+n(base.skillPowerPct)*0.04+n(base.areaPowerPct)*0.02+n(base.ultimatePowerPct)*0.03;
   const survivalBonus=n(base.damageReducePct)*0.015+n(base.extraHpPct)*0.01+n(base.weakpointDodgePct)*0.01;
 
@@ -290,7 +299,7 @@ function expectedDamageScore(db,state,sel=state.selected,kind="avg"){
   const generalPct =
     n(e.damageToEnemyPct)+n(e.enemyDamagePct)+n(e.targetIncomingDamageIncreasePct)+n(e.damagePct)+
     n(e.unarmoredDamagePct)*n(state.env.unarmoredUptime)+n(e.finalDamagePct)+n(e.galePostureDamagePct)+
-    n(e.skillDamagePct)+n(e.basicDamagePct)+n(e.basicAttackDamagePct)+
+    n(e.skillDamagePct)+
     n(e.braveDamagePct)+n(e.vulnerableDamagePct)+n(e.unshieldedDamagePct)+
     n(e.defenseBreakDamagePct)+n(e.dotDamagePct)+n(e.breakSkillDamagePct)+
     n(e.channelingDamagePct)+n(e.channelingSkillDamagePct)+n(e.castingSkillDamagePct)+
@@ -677,11 +686,11 @@ function timelineConditionList(raw){
 function timelineEffectPct(e){
   if(!e||typeof e!=="object")return 0;
   let pct=0;
-  const full=["attackPct","damagePct","enemyDamagePct","targetIncomingDamageIncreasePct","damageToEnemyPct","finalDamagePct","unarmoredDamagePct","defenseBreakDamagePct","dotDamagePct","basicDamagePct","basicAttackDamagePct"];
+  const full=["attackPct","damagePct","enemyDamagePct","targetIncomingDamageIncreasePct","damageToEnemyPct","finalDamagePct","unarmoredDamagePct","defenseBreakDamagePct","dotDamagePct"];
   const partial=[
     ["skillDamagePct",0.45],["ultimateSkillDamagePct",0.45],["castingSkillDamagePct",0.45],["chargeSkillDamagePct",0.45],["channelingSkillDamagePct",0.45],["breakSkillDamagePct",0.45],
     ["strongHitDamagePct",0.35],["multiHitDamagePct",0.28],["critDamagePct",0.32],["critChancePct",0.42],["extraHitChancePct",0.38],["followUpDamagePct",0.35],
-    ["attackSpeedPct",0.08],["skillSpeedPct",0.08],["castingSpeedPct",0.08],["chargeSpeedPct",0.08],["cooldownRecoveryPct",0.06]
+    ["skillSpeedPct",0.08],["castingSpeedPct",0.08],["chargeSpeedPct",0.08],["cooldownRecoveryPct",0.06]
   ];
   full.forEach(k=>{pct+=n(e[k])});
   partial.forEach(([k,w])=>{pct+=n(e[k])*w});

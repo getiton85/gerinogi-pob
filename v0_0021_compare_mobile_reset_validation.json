@@ -1,9 +1,9 @@
 {
-  "createdAt": "2026-07-09T07:42:54.211Z",
+  "createdAt": "2026-07-09T12:01:16.204Z",
   "pass": true,
   "checks": [
     {
-      "name": "version label is v0.0022",
+      "name": "version label is v0.0023",
       "pass": true,
       "detail": ""
     },

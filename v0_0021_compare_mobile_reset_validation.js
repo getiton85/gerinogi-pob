@@ -15,7 +15,7 @@ function check(name, pass, detail = "") {
   checks.push({ name, pass: Boolean(pass), detail });
 }
 
-check("version label is v0.0022", html.includes("v0.0022") && app.includes("v0.0022"));
+check("version label is v0.0023", html.includes("v0.0023") && app.includes("v0.0023"));
 check("compare card uses two-line readable layout", app.includes("compareRuneCardInner") && app.includes("compare-rune-name") && app.includes("compare-rune-meta"));
 check("compare percent font is compact", /\.compare-rune-meta b\{[^}]*font-size:12px/.test(css));
 check("recommendation uses tag focus and uptime sorting", app.includes("runeRecommendationScore") && app.includes("POB.runeFocusScore") && app.includes("b.uptime-a.uptime"));

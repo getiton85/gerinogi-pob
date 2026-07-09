@@ -1,0 +1,62 @@
+{
+  "pass": true,
+  "tests": [
+    {
+      "name": "self test passes",
+      "pass": true
+    },
+    {
+      "name": "infinite trajectory stores basic extra hit separately",
+      "pass": true
+    },
+    {
+      "name": "basic attack speed alone does not increase skill value",
+      "pass": true
+    },
+    {
+      "name": "basic attack damage and basic extra hit do not increase skill value",
+      "pass": true
+    },
+    {
+      "name": "infinite trajectory value equals attack-only value",
+      "pass": true
+    },
+    {
+      "name": "basic attack wording does not count as attack focus",
+      "pass": true
+    }
+  ],
+  "values": {
+    "empty": 100,
+    "infiniteTrajectory": {
+      "id": "weapon_s1_infinite_trajectory",
+      "name": "무수한 궤적",
+      "season": 1,
+      "tag": "시즌1",
+      "effects": {
+        "flatAttack": 723,
+        "attackPct": 17,
+        "attackSpeedPct": 30,
+        "basicExtraHitChancePct": 30
+      },
+      "rawOption": {
+        "rawName": "무기 룬: 무수한 궤적",
+        "slot": "weapon",
+        "rarity": "legendary",
+        "rawDescription": "공격력이 17%, 공격 속도가 30% 증가하며, 기본 공격 추가타 확률이 30% 증가한다.",
+        "baseStats": {
+          "flatAttack": 723
+        },
+        "always": {
+          "attackPct": 17,
+          "attackSpeedPct": 30,
+          "basicExtraHitChancePct": 30
+        }
+      }
+    },
+    "attackOnly": 111.72413793103453,
+    "trajectory": 111.72413793103453,
+    "speedOnly": 100,
+    "basicOnly": 100
+  }
+}

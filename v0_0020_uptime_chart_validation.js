@@ -40,8 +40,8 @@ const sortedWeaponRows=DB.runes.weapon.map(r=>({r,d:POB.slotValueDelta(DB,sortSt
   .sort((a,b)=>b.d.diffPct-a.d.diffPct);
 
 const checks=[
-  assert("version display",index.includes("v0.0020")&&app.includes("v0.0020"),"index/app version should be v0.0020"),
-  assert("cache busting",index.includes("data.js?v=0.0020")&&index.includes("core.js?v=0.0020")&&index.includes("app.js?v=0.0020"),"script query strings should be v0.0020"),
+  assert("version display",index.includes("v0.0023")&&app.includes("v0.0023"),"index/app version should be v0.0023"),
+  assert("cache busting",index.includes("data.js?v=0.0023")&&index.includes("core.js?v=0.0023")&&index.includes("app.js?v=0.0023"),"script query strings should be v0.0023"),
   assert("chart title",index.includes("장비 가동률"),"compare chart title should be 장비 가동률"),
   assert("old dps chart removed",!app.includes("초당 예상 DPS / 시간"),"old per-second DPS chart label should not remain"),
   assert("uptime chart label",app.includes("장비 가동률 / 부위별 비교"),"canvas label should describe equipment uptime"),
@@ -53,7 +53,7 @@ const checks=[
   assert("core self test",self.pass===true,JSON.stringify(self.tests||self.checks))
 ];
 
-const report={version:"v0.0020",generatedAt:new Date().toISOString(),checks};
+const report={version:"v0.0023",generatedAt:new Date().toISOString(),checks};
 fs.writeFileSync("v0_0020_uptime_chart_validation.json",JSON.stringify(report,null,2),"utf8");
 const failed=checks.filter(c=>c.status!=="PASS");
 console.log(JSON.stringify(report,null,2));

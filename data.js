@@ -2101,7 +2101,7 @@ const DB = {
           "flatAttack": 723,
           "attackPct": 17,
           "attackSpeedPct": 30,
-          "extraHitChancePct": 30
+          "basicExtraHitChancePct": 30
         },
         "rawOption": {
           "rawName": "무기 룬: 무수한 궤적",
@@ -2114,7 +2114,7 @@ const DB = {
           "always": {
             "attackPct": 17,
             "attackSpeedPct": 30,
-            "extraHitChancePct": 30
+            "basicExtraHitChancePct": 30
           }
         }
       },

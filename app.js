@@ -35,7 +35,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0020";
+if(appVersionEl)appVersionEl.textContent="v0.0022";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -169,6 +169,47 @@ function renderRuneRows(slot,query=""){
 function renderRuneButton(slot,r,d){
   return '<button type="button" class="rune-choice '+d.cls+'" data-slot="'+slot+'" data-rune="'+r.id+'">'+
     '<span>'+seasonBadge(r)+r.name+'</span><b>'+d.label+'</b></button>';
+}
+function escapeAttr(v){
+  return String(v||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+}
+function seasonLabelText(r){
+  if(!r||!r.id)return "";
+  const raw=POB.runeSeasonLabel?POB.runeSeasonLabel(r):(r.season!==undefined?"시즌"+r.season:"시즌2");
+  const m=String(raw).match(/(\d+)/);
+  return m ? "시즌"+m[1] : String(raw);
+}
+function seasonBadge(r){
+  const num=seasonNumber(r);
+  return num ? `<em class="season-badge season-${num}">시즌${num}</em>` : "";
+}
+function runeCardInner(r,d){
+  const name=(r&&r.name)||"없음";
+  const season=seasonBadge(r)||'<em class="season-badge season-none">-</em>';
+  return '<span class="rune-choice-name">'+name+'</span>'+
+    '<span class="rune-choice-meta"><span>'+season+'</span><b>'+d.label+'</b></span>';
+}
+function slotDelta(slot,runeId){
+  const currentId = state.selected[slot] || "";
+  runeId = runeId || "";
+  if(runeId === currentId) return {label:"현재", cls:"same", diff:0};
+  const result = POB.slotValueDelta(DB,state,slot,runeId,"avg");
+  const diff = result.diffPct;
+  const label = `${diff >= 0 ? "+" : ""}${(Math.round(diff*100)/100).toFixed(2)}%`;
+  return {label, cls: diff >= 0 ? "up" : "down", diff};
+}
+function renderRuneRows(slot,query=""){
+  const cat=POB.SLOT_CAT[slot], list=DB.runes[cat]||[];
+  const noneChoice={r:{id:"",name:"없음",tag:"",communityTier:""},d:slotDelta(slot,"")};
+  const runeRows=list.filter(r=>runeMatchesQuery(r,query)).map(r=>({r,d:slotDelta(slot,r.id)}))
+    .sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)));
+  const allRows=[noneChoice,...runeRows];
+  if(allRows.length===1 && query)return '<div class="rune-empty">검색 결과 없음</div>'+renderRuneButton(slot,noneChoice.r,noneChoice.d);
+  return allRows.map(({r,d})=>renderRuneButton(slot,r,d)).join("");
+}
+function renderRuneButton(slot,r,d){
+  return '<button type="button" class="rune-choice '+d.cls+'" data-slot="'+slot+'" data-rune="'+r.id+'">'+
+    runeCardInner(r,d)+'</button>';
 }
 function bindRuneChoices(root=equipSlots){
   root.querySelectorAll(".rune-choice").forEach(btn=>{
@@ -389,13 +430,46 @@ function compareRows(slot){
   const rows=[{r:{id:"",name:"없음",tag:""},d:slotDelta(slot,"")}].concat((DB.runes[cat]||[]).map(r=>({r,d:slotDelta(slot,r.id)})));
   return rows.sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)));
 }
+function compareRuneCardInner(r,d){
+  const name=(r&&r.name)||"없음";
+  const season=seasonBadge(r)||'<em class="season-badge season-none">-</em>';
+  return '<span class="compare-rune-name">'+name+'</span>'+
+    '<span class="compare-rune-meta"><span>'+season+'</span><b>'+d.label+'</b></span>';
+}
 function compareChoiceButton(slot,r,d){
   const selected=(state.compareSelected[slot]||"")===(r.id||"")?" selected":"";
   return '<button type="button" class="compare-rune-choice rune-choice '+d.cls+selected+'" data-compare-slot="'+slot+'" data-rune="'+(r.id||"")+'">'+
-    '<span>'+seasonBadge(r)+r.name+'</span><b>'+d.label+'</b></button>';
+    compareRuneCardInner(r,d)+'</button>';
 }
 function compareMenuHtml(slot){
   return compareRows(slot).map(({r,d})=>compareChoiceButton(slot,r,d)).join("");
+}
+function ensureCompareSelection(){
+  state.compareSelected=sanitizeSelection(state.compareSelected||state.selected);
+  state.compareSearch=state.compareSearch||{};
+}
+function compareRows(slot,query=""){
+  const cat=POB.SLOT_CAT[slot];
+  const noneChoice={r:{id:"",name:"없음",tag:""},d:slotDelta(slot,"")};
+  const runeRows=(DB.runes[cat]||[])
+    .filter(r=>runeMatchesQuery(r,query))
+    .map(r=>({r,d:slotDelta(slot,r.id)}))
+    .sort((a,b)=>b.d.diff-a.d.diff || String(a.r.name).localeCompare(String(b.r.name)));
+  return [noneChoice,...runeRows];
+}
+function compareRuneCardInner(r,d){
+  const name=(r&&r.name)||"없음";
+  const season=seasonBadge(r)||'<em class="season-badge season-none">-</em>';
+  return '<span class="compare-rune-name">'+name+'</span>'+
+    '<span class="compare-rune-meta"><span>'+season+'</span><b>'+d.label+'</b></span>';
+}
+function compareMenuHtml(slot){
+  const q=(state.compareSearch&&state.compareSearch[slot])||"";
+  const rows=compareRows(slot,q);
+  const hasRuneResult=rows.some(({r})=>r.id);
+  const empty=q&&!hasRuneResult?'<div class="rune-empty">검색 결과 없음</div>':"";
+  return '<div class="compare-search-wrap"><input class="compare-rune-search" data-compare-search="'+slot+'" type="search" value="'+escapeAttr(q)+'" placeholder="룬 검색 / 초성 검색" autocomplete="off"></div>'+
+    '<div class="compare-rune-results">'+empty+rows.map(({r,d})=>compareChoiceButton(slot,r,d)).join("")+'</div>';
 }
 function renderCompareEquip(){
   const root=document.getElementById("compareSlots");
@@ -406,7 +480,7 @@ function renderCompareEquip(){
     const d=slotDelta(slot,state.compareSelected[slot]||"");
     return '<div class="compare-slot" data-compare-wrap="'+slot+'"><span>'+COMPARE_SLOT_LABELS[slot]+'</span>'+
       '<button type="button" class="compare-toggle rune-choice '+d.cls+'" data-compare-toggle="'+slot+'">'+
-      '<span>'+seasonBadge(current)+(current?current.name:"없음")+'</span><b>'+d.label+'</b></button>'+
+      compareRuneCardInner(current,d)+'</button>'+
       '<div class="compare-rune-menu" id="compare_menu_'+slot+'">'+compareMenuHtml(slot)+'</div></div>';
   }).join("");
   root.querySelectorAll("[data-compare-toggle]").forEach(btn=>{
@@ -417,6 +491,23 @@ function renderCompareEquip(){
       const willOpen=!menu.classList.contains("open");
       root.querySelectorAll(".compare-rune-menu").forEach(m=>m.classList.remove("open"));
       if(willOpen)menu.classList.add("open");
+    };
+  });
+  root.querySelectorAll(".compare-rune-search").forEach(input=>{
+    input.onclick=e=>e.stopPropagation();
+    input.onkeydown=e=>e.stopPropagation();
+    input.oninput=()=>{
+      const slot=input.dataset.compareSearch;
+      state.compareSearch=state.compareSearch||{};
+      state.compareSearch[slot]=input.value;
+      renderCompareEquip();
+      const menu=document.getElementById("compare_menu_"+slot);
+      if(menu)menu.classList.add("open");
+      const next=menu&&menu.querySelector(".compare-rune-search");
+      if(next){
+        next.focus();
+        next.setSelectionRange(next.value.length,next.value.length);
+      }
     };
   });
   root.querySelectorAll(".compare-rune-choice").forEach(btn=>{
@@ -510,6 +601,17 @@ function drawCompareChart(canvas,summary){
   ctx.fillStyle="#8fa0b5";ctx.font="12px system-ui";ctx.fillText("장비 가동률 / 부위별 비교",w-160,20);
 }
 function drawRadar(vals){const canvas=radar,ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2+8,R=118,N=vals.length;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#334155";ctx.lineWidth=1;for(let ring=1;ring<=4;ring++){ctx.beginPath();for(let i=0;i<N;i++){const a=-Math.PI/2+i*2*Math.PI/N,r=R*ring/4,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()}vals.forEach(([label],i)=>{const a=-Math.PI/2+i*2*Math.PI/N;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();ctx.fillStyle="#dbe4ee";ctx.font="13px system-ui";ctx.textAlign=Math.cos(a)>.2?"left":Math.cos(a)<-.2?"right":"center";ctx.fillText(label,cx+Math.cos(a)*(R+26),cy+Math.sin(a)*(R+26))});ctx.beginPath();vals.forEach(([_,v],i)=>{const a=-Math.PI/2+i*2*Math.PI/N,r=R*Math.max(0,Math.min(100,v))/100,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i==0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.closePath();ctx.fillStyle="rgba(255,106,24,.35)";ctx.strokeStyle="#ff6a18";ctx.lineWidth=3;ctx.fill();ctx.stroke()}
+function runeRecommendationScore(r,d,profile){
+  const info=POB.classifyRune?POB.classifyRune(r,profile):null;
+  const uptime=n(info&&info.uptime);
+  const focus=state.focusTags&&state.focusTags.length?POB.runeFocusScore(r,state.focusTags):0;
+  return {
+    diff:n(d.diff),
+    uptime,
+    focus,
+    matches:!state.focusTags.length || focus>0.25
+  };
+}
 function renderRank(){
   document.querySelectorAll(".rank-tab").forEach(b=>{
     b.classList.toggle("active",b.dataset.rank===state.rankSlot);
@@ -518,13 +620,16 @@ function renderRank(){
   const slot=state.rankSlot,cat=POB.SLOT_CAT[slot];
   const current=runeByIdLocal(state.selected[slot]);
   const basis='<p class="rank-basis">비교 기준: 현재 장착 '+(current?current.name:"없음")+' · 선택 태그는 이 추천 순위의 %와 정렬에만 반영됩니다.</p>';
-  ranking.innerHTML=basis+(DB.runes[cat]||[]).map(r=>{
+  const profile=POB.combatProfile?POB.combatProfile(state):{};
+  const rows=(DB.runes[cat]||[]).map(r=>{
     const sel={...state.selected,[slot]:r.id};
     const nv=POB.normalizedValue(DB,state,sel,"avg");
     const tv=POB.slotValueDelta(DB,state,slot,r.id,"avg");
-    return{r,diff:tv.diffPct,value:tv.valueScore,combat:nv.combatValueScore,raw:nv.rawValueScore,tag:tv.tagDiffPct,reliability:nv.combat.reliability};
-  }).sort((a,b)=>b.diff-a.diff).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${seasonBadge(x.r)}${x.r.name}<br><small>${x.r.tag||""} · 비교 ${x.value.toFixed(2)}점 · 실전 ${x.combat.toFixed(2)}점 · 원점수 ${x.raw.toFixed(2)}${state.focusTags.length?` · 태그 ${x.tag>=0?"+":""}${x.tag.toFixed(2)}%`:""}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
+    const rec=runeRecommendationScore(r,tv,profile);
+    return{r,diff:tv.diffPct,value:tv.valueScore,combat:nv.combatValueScore,raw:nv.rawValueScore,tag:tv.tagDiffPct,reliability:nv.combat.reliability,uptime:rec.uptime,focus:rec.focus,matches:rec.matches};
+  }).filter(x=>x.matches);
+  ranking.innerHTML=basis+rows.sort((a,b)=>b.diff-a.diff || b.uptime-a.uptime || b.focus-a.focus || String(a.r.name).localeCompare(String(b.r.name))).slice(0,80).map((x,i)=>`<div class="rank-row"><b>${i+1}</b><div>${seasonBadge(x.r)}${x.r.name}<br><small>${x.r.tag||""} · 비교 ${x.value.toFixed(2)}점 · 가동률 ${Math.round(x.uptime*100)}% · 실전 ${x.combat.toFixed(2)}점${state.focusTags.length?` · 태그 ${x.tag>=0?"+":""}${x.tag.toFixed(2)}%`:""}</small></div><b>${x.diff>=0?"+":""}${(Math.round(x.diff*100)/100).toFixed(2)}%</b></div>`).join("");
 }
 function renderQA(){const qa=POB.runSelfTest(DB);qaPanel.innerHTML=qa.tests.map(t=>`<div class="audit-item"><b class="${t.pass?'ok':'bad'}">${t.pass?'통과':'실패'} · ${t.name}</b><br><span>${t.detail}</span></div>`).join("")}
 function renderAll(){renderEquip();renderCompareEquip();renderClass();renderSettings();renderDashboard();renderComparison();renderRank();save()}
-document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;syncModeButtons();renderDashboard();renderComparison();renderRank();save()});resetButton.onclick=()=>{state=freshState();if(activeProfile&&activeProfile.nickname){localStorage.removeItem(profileKey(activeProfile.nickname))}else{localStorage.removeItem(STORAGE_KEY)}renderAuth();renderAll()};renderAuth();renderAll();
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;syncModeButtons();renderDashboard();renderComparison();renderRank();save()});resetButton.onclick=()=>{state=normalizeState(freshState());if(activeProfile&&activeProfile.nickname){localStorage.removeItem(profileKey(activeProfile.nickname))}else{localStorage.removeItem(STORAGE_KEY)}document.querySelectorAll("[data-stat],[data-env],[data-env-choice]").forEach(input=>{input.value=""});renderAuth();renderAll()};renderAuth();renderAll();

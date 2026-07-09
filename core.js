@@ -151,16 +151,68 @@ function classEffects(db,state,preset){
   return{effects:e,directDps};
 }
 
-function runeEffects(db,state,runes,preset){
+function hasGiantFragment(rune){
+  return hasAny(runeText(rune),["거신의 파편","충전","전력"]);
+}
+
+function isAwakeningScalerRune(rune){
+  const id=String(rune&&rune.id||"");
+  return id==="armor_s1_apdojeogin_him"||id==="armor_s1_seomsehan_sonnollim"||hasAny(runeText(rune),["엠블럼의 각성 효과 활성화"]);
+}
+
+function isSwordDanceRune(rune){
+  return String(rune&&rune.id||"")==="weapon_s1_sword_dance_plus"||hasAny(runeText(rune),["검무","공격이 적중할 때마다 10초 동안 공격력","치명타 확률이 1%"]);
+}
+
+function mechanicProfile(db,state,sel,profile){
+  const runes=selectedRunes(db,sel||{});
+  const awakeningReduction=runes.reduce((sum,r)=>{
+    const text=runeText(r);
+    if(hasAny(text,["각성의 재사용 대기 시간이 38초 감소","각성의 재사용 대기 시간"]))return sum+Math.max(38,n((r.effects||{}).cooldownFlatSec));
+    return sum;
+  },0);
+  const emblem=runeById(db,(sel||{}).emblem);
+  const raw=emblem&&emblem.rawOption?emblem.rawOption:{};
+  const text=runeText(emblem);
+  const cooldowns=rawNumbersByKey(raw,"cooldownSec");
+  const durations=rawNumbersByKey(raw,"durationSec");
+  let cooldown=cooldowns.length?Math.max(...cooldowns):90;
+  let duration=durations.length?Math.max(...durations):20;
+  if(!cooldowns.length){
+    if(hasAny(text,["60초"]))cooldown=60;
+    else if(hasAny(text,["90초"]))cooldown=90;
+  }
+  if(!durations.length){
+    if(hasAny(text,["35초"]))duration=35;
+    else if(hasAny(text,["30초"]))duration=30;
+    else if(hasAny(text,["20초"]))duration=20;
+    else if(hasAny(text,["15초"]))duration=15;
+  }
+  const effectiveCooldown=Math.max(duration+1,cooldown-awakeningReduction);
+  const casts=emblem?Math.max(1,Math.floor((profile.durationSec-1)/effectiveCooldown)+1):0;
+  const awakeningUptime=emblem?clamp(Math.min(profile.activeSec,casts*duration)/profile.activeSec,0,1):0;
+  const hasChargeEngine=runes.some(r=>hasGiantFragment(r));
+  return{selectedRunes:runes,awakeningReduction,awakeningUptime,effectiveAwakeningCooldown:effectiveCooldown,awakeningDuration:duration,hasChargeEngine};
+}
+
+function scaledRuneEffect(key,value,multiplier){
+  const val=n(value);
+  if(key==="cooldownFlatSec")return val;
+  return val>0?val*multiplier:val;
+}
+
+function runeEffects(db,state,runes,preset,context){
   const e={};let directDps=0;
   for(const r of runes){
-    for(const[k,v]of Object.entries(r.effects||{}))add(e,k,n(v));
+    const effectMultiplier=isAwakeningScalerRune(r)?1+n(context&&context.awakeningUptime):1;
+    const directMultiplier=hasGiantFragment(r)?clamp(0.80+n(context&&context.awakeningUptime)*0.15,0.80,0.95):1;
+    for(const[k,v]of Object.entries(r.effects||{}))add(e,k,scaledRuneEffect(k,v,effectMultiplier));
     for(const[k,v]of Object.entries(r.conditionalAlways||{}))add(e,k,n(v));
-    if(r.directDps)directDps+=n(r.directDps);
-    if(r.periodicDps)directDps+=n(r.periodicDps);
+    if(r.directDps)directDps+=n(r.directDps)*directMultiplier;
+    if(r.periodicDps)directDps+=n(r.periodicDps)*directMultiplier;
     if(r.directDamage){
       const intv=r.directDamage.intervalFormula==="skill_plus_basic"?n(state.env.skillCycle)+n(state.env.basicDelay):5;
-      directDps+=n(r.directDamage.damage)/Math.max(.1,intv);
+      directDps+=n(r.directDamage.damage)/Math.max(.1,intv)*directMultiplier;
     }
     if(r.killBonus){
       const kills=state.mode==="abyss"?n(state.env.abyssKills):n(state.env.raidKills);
@@ -175,11 +227,14 @@ function runeEffects(db,state,runes,preset){
 
 function calc(db,state,sel=state.selected,kind="avg"){
   const preset=statePreset(state,kind);
-  const rCur=runeEffects(db,state,selectedRunes(db,sel),preset);
+  const profile=combatProfile(state);
+  const context=mechanicProfile(db,state,sel,profile);
+  const baseContext=mechanicProfile(db,state,state.baseline,profile);
+  const rCur=runeEffects(db,state,selectedRunes(db,sel),preset,context);
   const cEff=classEffects(db,state,preset);
   const effects=merge(rCur.effects,cEff.effects);
   const directDps=rCur.directDps+cEff.directDps;
-  const baseRune=runeEffects(db,state,selectedRunes(db,state.baseline),preset).effects;
+  const baseRune=runeEffects(db,state,selectedRunes(db,state.baseline),preset,baseContext).effects;
   const attackDiff=n(rCur.effects.attackPct)-n(baseRune.attackPct);
   const base=derivedStats(state);
 
@@ -319,7 +374,7 @@ function hintText(rune){
   return String(raw.expectedUptimeHint||raw.uptimeRisk||"").toLowerCase();
 }
 
-function runeCombatFactor(rune,profile){
+function runeCombatFactor(rune,profile,context){
   const raw=rune&&rune.rawOption?rune.rawOption:{};
   const hint=hintText(rune);
   let factor=1;
@@ -345,13 +400,22 @@ function runeCombatFactor(rune,profile){
       factor*=clamp(0.45+uptime*0.55,0.45,1);
     }
   }
+  if(hasGiantFragment(rune)){
+    const awaken=n(context&&context.awakeningUptime);
+    factor*=clamp(0.82+awaken*0.14,0.82,0.96);
+  }
+  if(isAwakeningScalerRune(rune)){
+    const awaken=n(context&&context.awakeningUptime);
+    factor*=clamp(0.72+awaken*0.28,0.72,1);
+  }
+  if(isSwordDanceRune(rune))factor=Math.max(factor,0.96);
 
   return clamp(factor,0.25,1);
 }
 
-function selectionCombatFactor(db,sel,profile){
+function selectionCombatFactor(db,sel,profile,context){
   const selected=selectedRunes(db,sel);
-  const factors=selected.map(r=>runeCombatFactor(r,profile)).filter(v=>v<0.995);
+  const factors=selected.map(r=>runeCombatFactor(r,profile,context)).filter(v=>v<0.995);
   if(!factors.length)return 1;
   const product=factors.reduce((acc,v)=>acc*v,1);
   return clamp(Math.pow(product,1/factors.length),0.35,1);
@@ -361,9 +425,10 @@ function combatDpsSummary(db,state,sel=state.selected,kind="avg"){
   const current=expectedDamageScore(db,state,sel,kind);
   const baseline=expectedDamageScore(db,state,state.baseline,kind);
   const profile=combatProfile(state);
+  const context=mechanicProfile(db,state,sel,profile);
   const baselineDps=baseline.score||1;
   const rawDelta=current.score-baselineDps;
-  const reliability=selectionCombatFactor(db,sel,profile);
+  const reliability=selectionCombatFactor(db,sel,profile,context);
   const adjustedDps=baselineDps+rawDelta*reliability;
   const baselineTotal=baselineDps*profile.activeSec;
   const total=adjustedDps*profile.activeSec;
@@ -516,11 +581,11 @@ function effectTagsForRune(rune){
   return TAG_FOCUS.filter(t=>tagEffectScore(t.id,effects,text)>0.25).map(t=>t.label);
 }
 
-function uptimeForRune(rune,profile){
+function uptimeForRune(rune,profile,context){
   if(!rune)return 1;
   const raw=rune.rawOption||{};
   const text=runeText(rune);
-  let uptime=runeCombatFactor(rune,profile);
+  let uptime=runeCombatFactor(rune,profile,context);
   const cooldowns=rawNumbersByKey(raw,"cooldownSec");
   const durations=rawNumbersByKey(raw,"durationSec");
   if(cooldowns.length&&durations.length){
@@ -538,11 +603,15 @@ function uptimeForRune(rune,profile){
   if(hasAny(text,["방어구 파괴"]))uptime*=0.75;
   if(hasAny(text,["침식"]))uptime=Math.max(uptime,0.82);
   if(hasAny(text,["밤의 축복"]))uptime=Math.max(uptime,0.75);
+  if(isSwordDanceRune(rune))uptime=Math.max(uptime,0.94);
+  if(hasGiantFragment(rune))uptime=Math.max(uptime,clamp(0.72+n(context&&context.awakeningUptime)*0.18,0.72,0.92));
+  if(isAwakeningScalerRune(rune))uptime=Math.max(uptime,clamp(n(context&&context.awakeningUptime),0.20,0.95));
+  if(!hasAny(text,["상시 효과"])&&uptime>0.98&&hasAny(text,["공격 시","공격 적중","스킬 사용","전투 시작","궁극기 사용","각성"]))uptime=0.95;
   return clamp(uptime,0.1,1);
 }
 
-function classifyRune(rune,profile){
-  const uptime=uptimeForRune(rune,profile);
+function classifyRune(rune,profile,context){
+  const uptime=uptimeForRune(rune,profile,context);
   return {
     id:rune&&rune.id||"",
     name:rune&&rune.name||"없음",
@@ -559,16 +628,17 @@ function classifyRune(rune,profile){
     effectTags:effectTagsForRune(rune),
     conditionTags:conditionTagsForRune(rune),
     uptime,
-    combatFactor:runeCombatFactor(rune,profile)
+    combatFactor:runeCombatFactor(rune,profile,context)
   };
 }
 
 function classifySelection(db,sel,state){
   const profile=combatProfile(state);
-  const runes=selectedRunes(db,sel).map(r=>classifyRune(r,profile));
+  const context=mechanicProfile(db,state,sel,profile);
+  const runes=selectedRunes(db,sel).map(r=>classifyRune(r,profile,context));
   const averageUptime=runes.length?runes.reduce((sum,r)=>sum+r.uptime,0)/runes.length:1;
-  const averageCombatFactor=selectionCombatFactor(db,sel,profile);
-  return {runes,averageUptime,averageCombatFactor,profile};
+  const averageCombatFactor=selectionCombatFactor(db,sel,profile,context);
+  return {runes,averageUptime,averageCombatFactor,profile,mechanics:context};
 }
 
 function comparisonSummary(db,state,compareSel=state.compareSelected||state.selected,kind="avg"){
@@ -821,6 +891,6 @@ function runSelfTest(db){
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,damageTimelinePoints,expectedDamageTimeline,diminishingPoints,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,mechanicProfile,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,damageTimelinePoints,expectedDamageTimeline,diminishingPoints,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

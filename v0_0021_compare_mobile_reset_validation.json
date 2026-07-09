@@ -1,0 +1,51 @@
+{
+  "createdAt": "2026-07-09T07:42:54.211Z",
+  "pass": true,
+  "checks": [
+    {
+      "name": "version label is v0.0022",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "compare card uses two-line readable layout",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "compare percent font is compact",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "recommendation uses tag focus and uptime sorting",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "reset normalizes fresh state and clears stat inputs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile page scroll is not trapped in equipment panel",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "core self tests pass",
+      "pass": true,
+      "detail": "PASS DB 중복 ID; PASS 엠블럼 기존 DB 보존; PASS 무기 기존 DB 보존; PASS 방어구 기존 DB 보존; PASS 기본 장착 비움; PASS 평균 점수 산출; PASS 패시브 ON/OFF 반응; PASS 어비스/레이드 모드 반응; PASS 레이드 5분 / 어비스 1분 전투시간 반영; PASS 직접DPS 산출; PASS 두 번째 스탯창 대시보드 반영; PASS 밸류점수 100 기준 정규화; PASS 고밸류 스탯 보정 적용; PASS 속도/쿨감/회복 직접 밸류 제외; PASS 밤의 축복 평균 유지율 25%; PASS 스킬 예상 데미지 산출"
+    },
+    {
+      "name": "tag focus can find a matching weapon rune",
+      "pass": true,
+      "detail": "눈부신 잔영"
+    },
+    {
+      "name": "slot delta returns finite value",
+      "pass": true,
+      "detail": "7.6478412308427215"
+    }
+  ]
+}

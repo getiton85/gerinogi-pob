@@ -1,5 +1,5 @@
 {
-  "version": "0.0024",
-  "display": "v0.0024",
-  "note": "Adds the material calculator with recursive ingredient totals and expected crafting time."
+  "version": "0.0025",
+  "display": "v0.0025",
+  "note": "Adds interactive magic resistance analysis and applies its multiplier to combat estimates."
 }

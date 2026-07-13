@@ -1,5 +1,5 @@
 {
-  "version": "0.0025",
-  "display": "v0.0025",
-  "note": "Adds interactive magic resistance analysis and applies its multiplier to combat estimates."
+  "version": "0.0026",
+  "display": "v0.0026",
+  "note": "Corrects magic resistance terminology and replaces the estimate with the pressure-based exponential damage formula without changing value score."
 }

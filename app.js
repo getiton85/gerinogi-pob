@@ -35,7 +35,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0025";
+if(appVersionEl)appVersionEl.textContent="v0.0026";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -380,8 +380,8 @@ function renderDashboard(){
   const cMin=POB.normalizedValue(DB,state,state.selected,"min");
   const cAvg=POB.normalizedValue(DB,state,state.selected,"avg");
   const cMax=POB.normalizedValue(DB,state,state.selected,"max");
-  scoreValue.textContent=(Math.round(cAvg.environmentValueScore*100)/100).toFixed(2);
-  stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.environmentValueScore*100)/100).toFixed(2)}</span><small>${c.environmentDiffPct>=0?"+":""}${(Math.round(c.environmentDiffPct*100)/100).toFixed(2)}% / ${c.combat.label} / 실전 ${pct(c.combat.reliability*100)}</small></div>`).join("");
+  scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);
+  stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / ${c.combat.label} / 실전 ${pct(c.combat.reliability*100)}</small></div>`).join("");
   const c=cAvg,combat=c.combat||POB.combatDpsSummary(DB,state,state.selected,"avg");
   const magicResist=combat.magicResist||POB.magicResistanceEffect(state);
   const items=[
@@ -434,7 +434,7 @@ function drawMagicResistChart(canvas,profile,currentResistance){
   ctx.textAlign="center";ctx.textBaseline="top";
   for(let v=0;v<=12000;v+=2000){ctx.strokeStyle="#334155";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x(v),pad.t);ctx.lineTo(x(v),h-pad.b);ctx.stroke();ctx.fillStyle="#aeb8c7";ctx.fillText(v.toLocaleString(),x(v),h-pad.b+10)}
   const vertical=(value,color,label)=>{ctx.save();ctx.strokeStyle=color;ctx.setLineDash([5,5]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x(value),pad.t);ctx.lineTo(x(value),h-pad.b);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=color;ctx.textAlign="left";ctx.textBaseline="top";ctx.fillText(label+" "+value.toLocaleString(),Math.min(w-150,x(value)+6),pad.t+6);ctx.restore()};
-  vertical(profile.required,"#ef4444","입장");vertical(profile.recommended,"#eab308","권장");
+  vertical(profile.pressure,"#eab308","마도압력");
   ctx.strokeStyle="#3b82f6";ctx.lineWidth=4;ctx.beginPath();
   for(let value=0;value<=12000;value+=50){const effect=POB.magicResistanceEffect(state,profile.id,value);const px=x(value),py=y(effect.bonusPct);if(value===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.stroke();
   const current=POB.magicResistanceEffect(state,profile.id,currentResistance);
@@ -447,11 +447,12 @@ function renderMagicResistance(){
   const select=document.getElementById("magicResistDifficulty"),canvas=document.getElementById("magicResistChart");
   if(!range||!input||!cards||!presets||!select||!canvas||!POB.magicResistanceEffect)return;
   const resistance=Math.max(0,Math.min(12000,n(state.env.magicResistance)));
-  const difficulty=state.env.magicResistDifficulty||"veryHard";
+  let difficulty=state.env.magicResistDifficulty||"veryHard";
+  if(difficulty==="region1"){difficulty="hell1";state.env.magicResistDifficulty=difficulty}
   range.value=resistance;input.value=resistance;
-  const presetRows=[{label:"10성 문만",value:3000},{label:"문+기본 잔영",value:4400},{label:"문+최대 잔영",value:7200},{label:"문+최대 해연",value:10000}];
+  const presetRows=[{label:"10성 룬만",value:3000},{label:"룬+기본 잔영",value:4400},{label:"룬+최대 잔영",value:7200},{label:"룬+최대 해연",value:10000}];
   presets.innerHTML=presetRows.map(row=>`<button type="button" data-magic-preset="${row.value}" class="${resistance===row.value?"active":""}">${row.label} · ${row.value.toLocaleString()}</button>`).join("");
-  cards.innerHTML=POB.MAGIC_RESIST_PROFILES.map(profile=>{const effect=POB.magicResistanceEffect(state,profile.id,resistance);return `<button type="button" class="magic-resist-card ${difficulty===profile.id?"active":""}" data-magic-difficulty="${profile.id}"><b>${profile.name}</b><strong class="${effect.bonusPct>=0?"positive":"negative"}">${plusPct(effect.bonusPct)}</strong><small>입장 ${profile.required.toLocaleString()} · 권장 ${profile.recommended.toLocaleString()}</small></button>`}).join("");
+  cards.innerHTML=POB.MAGIC_RESIST_PROFILES.map(profile=>{const effect=POB.magicResistanceEffect(state,profile.id,resistance);return `<button type="button" class="magic-resist-card ${difficulty===profile.id?"active":""}" data-magic-difficulty="${profile.id}"><b>${profile.name}</b><strong class="${effect.bonusPct>=0?"positive":"negative"}">${plusPct(effect.bonusPct)}</strong><small>던전 마도압력 ${profile.pressure.toLocaleString()}</small></button>`}).join("");
   select.innerHTML=POB.MAGIC_RESIST_PROFILES.map(profile=>`<option value="${profile.id}" ${profile.id===difficulty?"selected":""}>어비스 ${profile.name}</option>`).join("");
   drawMagicResistChart(canvas,POB.magicResistProfile(state,difficulty),resistance);
   const updateResistance=value=>{state.env.magicResistance=Math.max(0,Math.min(12000,n(value)));renderDashboard();renderComparison();renderRank();save()};

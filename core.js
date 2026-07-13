@@ -4,32 +4,27 @@ const DEFAULT_SELECTED={emblem:"",weapon:"",head:"",top:"",bottom:"",gloves:"",s
 const DEFAULT_STATS={attack:57582,defense:18542,breakPower:2914,strongStat:4957,comboStat:1532,skillPower:2729,areaPower:1412,recoveryPower:2468,weakpointDodge:1358,extraStat:2797,damageReduce:2998,fastAttack:2047,multiStat:1681,fastSkill:1757,extraHp:27183,ultimatePower:1366,critStat:8649,critDamageBase:300};
 const DEFAULT_ENV={skillCycle:2.5,basicDelay:0.35,abyssKills:20,raidKills:0,unarmoredUptime:0.5,nightBlessingUptime:0.25,focusUptime:0.5,nightTraceLevel:45,galeStacksMax:5,ultimateCycleSec:75,breakExtensionMultiplier:2,gemLines:0,magicResistance:4400,magicResistDifficulty:"veryHard"};
 const MAGIC_RESIST_PROFILES=[
-  {id:"normal",name:"일반/심층",required:1200,recommended:1800,referenceBonus:10.5},
-  {id:"entry",name:"입문",required:1800,recommended:2200,referenceBonus:8.4},
-  {id:"hard",name:"어려움",required:2000,recommended:2400,referenceBonus:7.1},
-  {id:"veryHard",name:"매우 어려움",required:2200,recommended:2700,referenceBonus:4.4},
-  {id:"region1",name:"지역1",required:3600,recommended:4400,referenceBonus:0}
+  {id:"normal",name:"일반/심층",pressure:0},
+  {id:"entry",name:"입문",pressure:1000},
+  {id:"hard",name:"어려움",pressure:1600},
+  {id:"veryHard",name:"매우 어려움",pressure:2700},
+  {id:"hell1",name:"지옥1",pressure:4400}
 ];
 function magicResistProfile(state,difficulty){
-  const id=difficulty||(state&&state.env&&state.env.magicResistDifficulty)||"veryHard";
+  let id=difficulty||(state&&state.env&&state.env.magicResistDifficulty)||"veryHard";
+  if(id==="region1")id="hell1";
   return MAGIC_RESIST_PROFILES.find(row=>row.id===id)||MAGIC_RESIST_PROFILES[3];
 }
 function magicResistanceEffect(state,difficulty,resistance){
   const profile=magicResistProfile(state,difficulty);
   const value=clamp(resistance===undefined?(state&&state.env&&state.env.magicResistance):resistance,0,12000);
-  let bonusPct=0;
-  if(value<profile.recommended){
-    const gap=(profile.recommended-value)/Math.max(1,profile.recommended);
-    bonusPct=-Math.min(90,85*Math.pow(gap,1.4));
-  }else if(profile.referenceBonus>0){
-    const refSpan=Math.max(1,4400-profile.recommended);
-    const scale=profile.referenceBonus/Math.log1p(refSpan/2000);
-    bonusPct=scale*Math.log1p((value-profile.recommended)/2000);
-  }else{
-    bonusPct=9.5*Math.log1p((value-profile.recommended)/2400);
-  }
+  const pressure=profile.pressure;
+  let multiplier=1;
+  if(value<pressure)multiplier=Math.pow(0.5,(pressure-value)/1000);
+  else if(value>pressure)multiplier=1.4-0.4*Math.pow(0.5,(value-pressure)/10000);
+  let bonusPct=(multiplier-1)*100;
   bonusPct=Math.round(bonusPct*10)/10;
-  return {profile,resistance:value,bonusPct,multiplier:Math.max(0.1,1+bonusPct/100)};
+  return {profile,resistance:value,pressure,bonusPct,multiplier};
 }
 const TAG_FOCUS=[
   {id:"strong",label:"강타"},
@@ -497,11 +492,10 @@ function normalizedValue(db,state,sel=state.selected,kind="avg"){
   const baseScore = baseExpected.score || 1;
   const value = baseScore > 0 ? (rawExpected.score / baseScore) * 100 : 100;
   const combat=combatDpsSummary(db,state,sel,kind);
-  const resistMultiplier=Math.max(0.1,n(combat.magicResist&&combat.magicResist.multiplier)||1);
+  const resistMultiplier=Math.max(0.01,n(combat.magicResist&&combat.magicResist.multiplier)||1);
   const combatValue=combat.baselineDpsScore>0 ? ((combat.adjustedDpsScore/resistMultiplier)/combat.baselineDpsScore)*100 : 100;
-  const environmentValue=combatValue*resistMultiplier;
   const tagFocus=tagFocusAdjustment(db,state,sel);
-  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: combatValue, combatValueScore: combatValue, environmentValueScore:environmentValue, rawValueScore: value, diffPct: combatValue - 100, combatDiffPct: combatValue - 100, environmentDiffPct:environmentValue-100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat, tagFocus};
+  return {...raw, rawScore: rawExpected.score, baselineRawScore: baseScore, valueScore: combatValue, combatValueScore: combatValue, rawValueScore: value, diffPct: combatValue - 100, combatDiffPct: combatValue - 100, rawDiffPct: value - 100, expectedAxes: rawExpected.axes, combat, tagFocus};
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,n(v)))}
@@ -928,7 +922,7 @@ function runSelfTest(db){
     {name:"어비스/레이드 모드 반응",pass:cRaid.score!==cAbyss.score,detail:`레이드 ${Math.round(cRaid.score)} / 어비스 ${Math.round(cAbyss.score)}`},
     {name:"레이드 5분 / 어비스 1분 전투시간 반영",pass:raidCombat.durationSec===300&&abyssCombat.durationSec===60,detail:`${raidCombat.label} ${raidCombat.durationSec}초 / ${abyssCombat.label} ${abyssCombat.durationSec}초`},
     {name:"직접DPS 산출",pass:Number.isFinite(c1.directDps)&&c1.directDps>=0,detail:Math.round(c1.directDps).toLocaleString()},
-    {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"장비 기준 100.00"},{name:"마도저항 전투 밸류 반영",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").environmentValueScore-(100*magicResistanceEffect(state).multiplier))<0.0001,detail:`저항 ${state.env.magicResistance} · ${magicResistanceEffect(state).bonusPct}%`},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`}
+    {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"마도저항과 무관한 장비 기준 100.00"},{name:"마도저항 피해 배율 공식",pass:Math.abs(magicResistanceEffect(state,"entry",0).multiplier-0.5)<0.0001&&magicResistanceEffect(state,"veryHard",4400).bonusPct===4.4,detail:"입문 저항0=0.5배 · 매우 어려움 저항4400=+4.4%"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`}
   ];
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }

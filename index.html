@@ -3,14 +3,20 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>게리롱 멋대로 POB식 밸류 v0.0023</title>
-  <link rel="stylesheet" href="style.css?v=0.0023"/>
+  <title>게리롱 멋대로 POB식 밸류 v0.0024</title>
+  <link rel="stylesheet" href="style.css?v=0.0024"/>
 </head>
 <body>
 <header>
   <div class="brand">
     <h1>게리롱 멋대로 POB식 밸류</h1>
-    <p id="appVersion">v0.0023</p>
+    <div class="brand-tools">
+      <p id="appVersion">v0.0024</p>
+      <nav class="page-tabs" aria-label="계산기 화면 전환">
+        <button id="valuePageBtn" type="button" class="page-tab active" aria-selected="true">밸류 계산</button>
+        <button id="materialPageBtn" type="button" class="page-tab" aria-selected="false">재료 계산</button>
+      </nav>
+    </div>
   </div>
   <div class="header-actions">
     <form id="authForm" class="auth-form">
@@ -23,7 +29,7 @@
     <button id="resetBtn">초기화</button>
   </div>
 </header>
-<main class="layout">
+<main id="valuePage" class="layout page">
   <aside class="panel equip-panel">
     <h2>현재 장착</h2>
     <div id="equipSlots"></div>
@@ -100,8 +106,65 @@
     </details>
   </section>
 </main>
-  <script src="data.js?v=0.0023"></script>
-  <script src="core.js?v=0.0023"></script>
-  <script src="app.js?v=0.0023"></script>
+<main id="materialPage" class="material-page page" hidden>
+  <section class="material-hero panel">
+    <div>
+      <span class="material-eyebrow">제작 목표 역산</span>
+      <h2>재료 계산</h2>
+      <p>원하는 가공품 수량을 입력하면 필요한 중간재와 원재료, 총 제작 시간을 계산합니다.</p>
+    </div>
+    <div class="material-mode" role="group" aria-label="생산량 계산 기준">
+      <button type="button" class="material-mode-btn active" data-material-mode="fixed">확정 생산량</button>
+      <button type="button" class="material-mode-btn" data-material-mode="expected">대성공 기대값</button>
+    </div>
+  </section>
+
+  <section class="material-workspace">
+    <div class="material-input-panel panel">
+      <div class="material-section-head">
+        <div>
+          <h2>목표 가공품</h2>
+          <p>여러 품목을 동시에 입력할 수 있습니다.</p>
+        </div>
+        <button id="materialResetBtn" type="button" class="ghost-btn">입력 초기화</button>
+      </div>
+      <div id="materialCategoryTabs" class="material-category-tabs" role="tablist" aria-label="가공 종류"></div>
+      <div id="materialTargetGrid" class="material-target-grid"></div>
+    </div>
+
+    <aside class="material-result-panel panel" aria-live="polite">
+      <div class="material-section-head">
+        <div>
+          <h2>계산 결과</h2>
+          <p id="materialResultBasis">일반 성공 생산량 기준</p>
+        </div>
+      </div>
+      <div id="materialSummary" class="material-summary"></div>
+      <div id="materialEmpty" class="material-empty">
+        <strong>목표 수량을 입력해 주세요.</strong>
+        <span>선택한 품목의 모든 하위 제작 단계를 자동으로 펼쳐 계산합니다.</span>
+      </div>
+      <div id="materialResults" hidden>
+        <section class="material-result-section">
+          <h3>최종 원재료</h3>
+          <div id="rawMaterialList" class="raw-material-list"></div>
+        </section>
+        <section class="material-result-section">
+          <h3>제작 단계</h3>
+          <div class="material-table-wrap">
+            <table class="material-table">
+              <thead><tr><th>가공품</th><th>필요</th><th>1회 생산</th><th>제작 횟수</th><th>예상 생산</th><th>시간</th></tr></thead>
+              <tbody id="craftStepBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </section>
+</main>
+  <script src="data.js?v=0.0024"></script>
+  <script src="core.js?v=0.0024"></script>
+  <script src="app.js?v=0.0024"></script>
+  <script src="material-calculator.js?v=0.0024"></script>
 </body>
 </html>

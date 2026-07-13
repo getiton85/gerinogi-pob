@@ -1,5 +1,5 @@
 {
-  "version": "0.0011",
-  "display": "v0.0011",
-  "note": "Rune recommendations show their equipped-rune basis, and DPS/total expected damage hide sub-10000 detail."
+  "version": "0.0024",
+  "display": "v0.0024",
+  "note": "Adds the material calculator with recursive ingredient totals and expected crafting time."
 }

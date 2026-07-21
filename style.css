@@ -186,8 +186,11 @@ body{overflow-x:hidden}
 .collapsible-panel>*:last-child{margin-bottom:16px}
 .skill-panel-summary .class-toggle{margin-left:auto}
 .skill-panel-summary::after{margin-left:0}
+.class-toggle-group{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;margin-left:auto;font-size:13px;color:#aeb8c7}
+.class-toggle-group .class-toggle{margin-left:0;min-width:52px}
+.skill-empty{grid-column:1/-1;padding:22px;border:1px dashed #3b4759;border-radius:12px;color:#9ca8b7;text-align:center;background:#10151d}
 .skill-passive-list{margin-bottom:12px}
-@media(max-width:760px){.collapsible-panel>.panel-summary{font-size:20px}.skill-panel-summary{flex-wrap:wrap}.skill-panel-summary .class-toggle{margin-left:0}}
+@media(max-width:760px){.collapsible-panel>.panel-summary{font-size:20px}.skill-panel-summary{flex-wrap:wrap}.skill-panel-summary .class-toggle{margin-left:0}.class-toggle-group{width:100%;justify-content:flex-start;margin-left:0}}
 
 
 /* v0.0006 environment panel alignment and gem setting */

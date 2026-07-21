@@ -1,5 +1,5 @@
 {
-  "version": "0.0026",
-  "display": "v0.0026",
-  "note": "Corrects magic resistance terminology and replaces the estimate with the pressure-based exponential damage formula without changing value score."
+  "version": "0.0027",
+  "display": "v0.0027",
+  "note": "Adds mutually exclusive Swordsman and Greatsword Warrior selection, verified Greatsword Warrior skill/passive data, staged charge damage, and the shared Deepening Darkness formula."
 }

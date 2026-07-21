@@ -85,11 +85,25 @@ const DB = {
         {
           "id": "deepening_darkness",
           "name": "깊어지는 어둠",
-          "effects": {
-            "nightTraceFinalDamage": 1
-          },
-          "note": "밤의 흔적 Lv45=1.7% 기준"
+          "common": true,
+          "note": "공통 시즌 패시브 · 밤의 흔적 레벨당 최종 데미지 +0.1% (최대 150레벨)"
         }
+      ]
+    },
+    {
+      "id": "greatsword_warrior",
+      "name": "대검전사",
+      "passives": [
+        {"id":"onslaught_plus","name":"맹공+","effects":{},"note":"공격 적중 시 35% 확률 · 캐스팅/스킬 발동 속도 +50% · 보복 1중첩 · 2회 적용"},
+        {"id":"indomitable","name":"불굴","effects":{},"note":"방어력 +150% · 스킬 준비 중 브레이크 면역"},
+        {"id":"battle_training_spirit","name":"전투 숙련: 패기","effects":{"strongHitDamagePct":5},"note":"받는 기본 공격 피해 -10% · 강타 데미지 +5%"},
+        {"id":"retaliation","name":"보복","effects":{},"note":"체력 10% 소모마다 공격력 +5% 중첩 · 최대 100중첩 · 15초"},
+        {"id":"melee","name":"난투","effects":{},"note":"공격 적중 시 보복 중첩당 체력 3,346 회복"},
+        {"id":"crushed_wound","name":"뭉개진 상처","effects":{},"directDamage":{"min":47223,"max":94447,"maxAtTargetHpPct":30},"note":"#보조 #방해 · 적 체력이 낮을수록 47,223~94,447 지속 피해"},
+        {"id":"merciless_blade","name":"무자비한 칼날","effects":{},"note":"맹공 보유 시 피해 +25%, 강타 강화 비례 최대 +25% · 미보유 시 스킬 속도 +10%, 강타 강화 비례 최대 +20% (상한 5,000)"},
+        {"id":"night_blessing","name":"밤의 축복","effects":{"attackPct":15},"uptimeEnv":"nightBlessingUptime","note":"전투 템포 최대 시 15초 동안 공격력 +15% · 재사용 60초"},
+        {"id":"belly_breaker","name":"배 부수기","effects":{},"directDamage":{"damage":74208,"intervalSec":10},"note":"공격 적중 시 74,208 추가 피해 · 브레이크 1칸 · 대상별 재사용 10초"},
+        {"id":"deepening_darkness","name":"깊어지는 어둠","common":true,"note":"공통 시즌 패시브 · 밤의 흔적 레벨당 최종 데미지 +0.1% (최대 150레벨)"}
       ]
     }
   ],
@@ -104,6 +118,24 @@ const DB = {
       {"id":"flying_sword_gale","name":"비검: 질풍 베기","form":"질풍 연계","tags":["스킬","비검","연타","광역"],"damageParts":[{"label":"연타","damage":6985,"hits":5},{"label":"마무리","damage":34925}],"cooldownSec":10,"rangeM":4,"areaM":4,"source":"user_screenshot_2026_07_03"},
       {"id":"ganpa","name":"간파","form":"일섬의 각인","tags":["스킬","광역"],"damage":69851,"cooldownSec":18,"focusGain":35,"rangeM":12,"areaM":6,"note":"밤의 축복 발동 트리거. 밤의 축복 기본 유지율은 15/60=25%로 계산한다.","source":"user_screenshot_2026_07_03"},
       {"id":"ultimate_flash","name":"일섬","form":"궁극기","tags":["스킬","궁극기","광역"],"damage":194032,"ultimateCost":300,"cooldownSec":75,"rangeM":10,"areaM":15,"note":"사용자 체감 60~90초 주기. 기본값은 75초.","source":"user_screenshot_2026_07_03"}
+    ],
+    "greatsword_warrior": [
+      {"id":"spinning_slash","name":"회전 베기 +10","form":"기본","rarity":"레어","tags":["스킬","강타","보조"],"damage":44975,"cooldownSec":4,"rangeM":3.2,"areaM":4,"source":"user_handoff_2026_07_21"},
+      {"id":"spinning_slash_rotation","name":"회전 베기 +10","form":"회전의 각인","rarity":"레어","tags":["스킬","강타","보조"],"damageParts":[{"label":"회전 타격","damage":19586,"hits":2},{"label":"마무리","damage":39173}],"cooldownSec":20,"rangeM":3.2,"areaM":4,"source":"user_handoff_2026_07_21"},
+      {"id":"spinning_slash_cut","name":"회전 베기 +10","form":"절단의 각인","rarity":"레어","tags":["스킬","강타","보조"],"damage":39173,"cooldownSec":5,"maxStacks":2,"rangeM":3.2,"areaM":4,"source":"user_handoff_2026_07_21"},
+      {"id":"rising_smash","name":"라이징 스매시 +10","form":"기본","rarity":"레어","tags":["스킬","강타","방해"],"damage":44075,"breakGauge":1,"cooldownSec":12,"rangeM":3.2,"areaM":4.5,"source":"user_handoff_2026_07_21"},
+      {"id":"rising_smash_counter","name":"라이징 스매시 +10","form":"반격의 각인","rarity":"레어","tags":["스킬","강타","방해"],"damageStages":[29530,47911,66293],"chargeSecPerStage":1.05,"breakGauge":1,"additionalBreakGauge":1,"cooldownSec":12,"rangeM":3.2,"areaM":4.5,"note":"불굴 방어력 증가 +300%","source":"user_handoff_2026_07_21"},
+      {"id":"shoulder_strike","name":"어깨 치기 +10","form":"기본","rarity":"레어","tags":["스킬","강타","이동"],"damage":35080,"cooldownSec":7.5,"rangeM":15,"source":"user_handoff_2026_07_21"},
+      {"id":"stomp","name":"발구르기 +30","form":"다른 폼","rarity":"레어","tags":["스킬","강타","이동"],"damage":35080,"cooldownSec":7.5,"rangeM":4,"areaM":5,"source":"user_handoff_2026_07_21"},
+      {"id":"shoulder_strike_rage","name":"어깨 치기 +10","form":"분노의 각인 · 기본폼","rarity":"레어","tags":["스킬","강타","이동"],"damage":23503,"cooldownSec":7.5,"rangeM":15,"source":"user_handoff_2026_07_21"},
+      {"id":"stomp_rage","name":"발구르기 +30","form":"분노의 각인 · 변화폼","rarity":"레어","tags":["스킬","강타","이동"],"damage":23503,"breakGauge":1,"cooldownSec":7.5,"rangeM":4,"areaM":5,"source":"user_handoff_2026_07_21"},
+      {"id":"shoulder_strike_blockade","name":"어깨 치기 +10","form":"봉쇄의 각인","rarity":"레어","tags":["스킬","강타","이동"],"damage":23503,"cooldownSec":6,"rangeM":15,"shield":15186,"shieldDurationSec":2,"note":"돌진 중 방어력 +150% · 넘어짐 면역","source":"user_handoff_2026_07_21"},
+      {"id":"cleave","name":"가르기 +30","form":"기본","rarity":"전설","tags":["스킬","강타","보조"],"damage":31482,"cooldownSec":3.5,"rangeM":3.2,"areaM":5,"source":"user_handoff_2026_07_21"},
+      {"id":"cleave_elasticity","name":"가르기 +30","form":"탄력의 각인","rarity":"전설","tags":["스킬","강타","보조"],"damageStages":[35980,53970,71960],"chargeSecPerStage":1.05,"cooldownSec":6.5,"rangeM":3.2,"areaM":5,"note":"탄력 지속 10초","source":"user_handoff_2026_07_21"},
+      {"id":"greatsword_earth_sweep","name":"대지 휩쓸기 +30","form":"대검술 +30 · 1단계","rarity":"전설","tags":["스킬","강타","보조"],"damageStages":[40477,58467,76457],"chargeSecPerStage":1.05,"tempoCost":1,"rangeM":3.2,"areaM":6,"source":"user_handoff_2026_07_21"},
+      {"id":"greatsword_heart_pierce","name":"심장 찌르기 +30","form":"대검술 +30 · 1단계","rarity":"전설","tags":["스킬","강타","보조"],"damageStages":[40477,58467,76457],"damageOverTimePerSec":7645,"chargeSecPerStage":1.05,"durationStagesSec":[30,60,90],"targetIncomingDamageIncreasePct":10,"tempoCost":2,"rangeM":3.2,"source":"user_handoff_2026_07_21"},
+      {"id":"greatsword_wind_cleave","name":"바람 가르기 +30","form":"대검술 +30 · 1단계","rarity":"전설","tags":["스킬","강타","보조"],"damageStages":[71960,98945,125930],"chargeSecPerStage":1.05,"tempoCost":3,"rangeM":3.2,"areaM":4,"note":"무방비 대상 100% · 심장 찌르기 보유 대상 35% 확률","source":"user_handoff_2026_07_21"},
+      {"id":"desperate_strike","name":"필사의 일격 +30","form":"궁극기","rarity":"전설","tags":["스킬","궁극기","강타","보조"],"damage":198789,"ultimateCost":300,"ultimateCycleEnv":true,"rangeM":6,"areaM":8,"note":"공격력 증가 +50%","source":"user_handoff_2026_07_21"}
     ]
   },
   "runes": {

@@ -1,5 +1,5 @@
 const SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
-function freshState(){return {selected:{...POB.DEFAULT_SELECTED},compareSelected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",rankSlot:"weapon",focusTags:[],stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
+function freshState(){return {selected:{...POB.DEFAULT_SELECTED},compareSelected:{...POB.DEFAULT_SELECTED},baseline:{...POB.DEFAULT_SELECTED},classEnabled:{swordsman:false,greatsword_warrior:false},mode:"raid",rankSlot:"weapon",focusTags:[],stats:{...POB.DEFAULT_STATS},env:{...POB.DEFAULT_ENV}}}
 const STORAGE_KEY="mabi_pob_v12";
 const AUTH_SESSION_KEY="mabi_pob_auth_session";
 function normalizeNickname(name){return String(name||"").trim()}
@@ -11,7 +11,8 @@ function normalizeState(next){
   next.selected=sanitizeSelection(next.selected);
   next.compareSelected=sanitizeSelection(next.compareSelected||next.selected);
   next.baseline=sanitizeSelection(next.baseline);
-  next.classEnabled={swordsman:false,...(next.classEnabled||{})};
+  next.classEnabled={swordsman:false,greatsword_warrior:false,...(next.classEnabled||{})};
+  if(next.classEnabled.swordsman&&next.classEnabled.greatsword_warrior)next.classEnabled.greatsword_warrior=false;
   next.stats={...POB.DEFAULT_STATS,...(next.stats||{})};
   next.env={...POB.DEFAULT_ENV,...(next.env||{})};
   next.mode=next.mode||"raid";
@@ -35,7 +36,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0026";
+if(appVersionEl)appVersionEl.textContent="v0.0027";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -266,7 +267,26 @@ function renderEquip(){
   });
 }
 
-function renderClass(){const on=state.classEnabled.swordsman;if(swordsmanToggle){swordsmanToggle.textContent=on?"ON":"OFF";swordsmanToggle.className="class-toggle "+(on?"on":"off");swordsmanToggle.onclick=e=>{e.preventDefault();e.stopPropagation();state.classEnabled.swordsman=!state.classEnabled.swordsman;renderAll();save()}}if(classPassiveList){classPassiveList.innerHTML=DB.classes[0].passives.map(p=>`<div class="passive-mini ${on?"":"off"}"><b>${p.name}</b><small>${p.note||""}</small></div>`).join("")}}
+function activeClassId(){return Object.keys(state.classEnabled||{}).find(id=>state.classEnabled[id])||""}
+function renderClass(){
+  const buttons=document.querySelectorAll("[data-class-toggle]");
+  buttons.forEach(button=>{
+    const id=button.dataset.classToggle,on=!!state.classEnabled[id];
+    button.textContent=on?"ON":"OFF";
+    button.className="class-toggle "+(on?"on":"off");
+    button.onclick=e=>{
+      e.preventDefault();e.stopPropagation();
+      const next=!state.classEnabled[id];
+      Object.keys(state.classEnabled).forEach(key=>state.classEnabled[key]=false);
+      state.classEnabled[id]=next;
+      renderAll();save();
+    };
+  });
+  const id=activeClassId(),classData=DB.classes.find(row=>row.id===id);
+  const title=document.getElementById("skillPanelTitle");
+  if(title)title.textContent=(classData?classData.name:"직업")+" 스킬 예상 데미지";
+  if(classPassiveList)classPassiveList.innerHTML=classData?classData.passives.map(p=>`<div class="passive-mini"><b>${p.name}</b><small>${p.note||""}</small></div>`).join(""):'<div class="passive-mini off"><b>직업을 선택해 주세요</b><small>검술사와 대검전사 중 하나만 적용됩니다.</small></div>';
+}
 
 
 function updateDerivedPanel(){
@@ -465,7 +485,7 @@ function renderSkillDamage(){
   const panel=document.getElementById("skillDamagePanel");
   if(!panel||!POB.skillDamageRows)return;
   const rows=POB.skillDamageRows(DB,state,state.selected,"avg");
-  panel.innerHTML=rows.map(r=>`<div class="skill-card"><div class="skill-head"><div><b>${r.name}</b><small>${r.form||"기본"} · ${r.tags.join(" / ")}</small></div><span>${r.cooldownSec.toFixed(1)}초</span></div><div class="skill-grid"><div><em>노크리</em><strong>${fmt(r.noCrit)}</strong></div><div><em>크리</em><strong>${fmt(r.crit)}</strong></div><div><em>브레이크</em><strong>${fmt(r.breakDamage)}</strong></div><div><em>브레이크 익스텐션</em><strong>${fmt(r.breakExtension)}</strong></div></div><p>1분 노크리 기준 ${fmt(r.damagePerMinute)} · 툴팁 피해 기반</p></div>`).join("");
+  panel.innerHTML=rows.length?rows.map(r=>`<div class="skill-card"><div class="skill-head"><div><b>${r.name}</b><small>${r.form||"기본"} · ${r.tags.join(" / ")}</small></div><span>${r.cooldownSec?r.cooldownSec.toFixed(1)+"초":"쿨타임 미제공"}</span></div><div class="skill-grid"><div><em>노크리</em><strong>${fmt(r.noCrit)}</strong></div><div><em>크리</em><strong>${fmt(r.crit)}</strong></div><div><em>브레이크</em><strong>${fmt(r.breakDamage)}</strong></div><div><em>브레이크 익스텐션</em><strong>${fmt(r.breakExtension)}</strong></div></div><p>${r.damagePerMinute?"1분 노크리 기준 "+fmt(r.damagePerMinute)+" · ":""}툴팁 피해 기반</p></div>`).join(""):'<div class="skill-empty">직업을 켜면 스킬 예상 데미지가 표시됩니다.</div>';
 }
 const COMPARE_SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
 function fmtCombat(v){const value=Math.max(0,Math.floor(n(v)));const eok=Math.floor(value/100000000);const man=Math.floor((value%100000000)/10000);if(eok&&man)return eok.toLocaleString()+"억 "+man.toLocaleString()+"만";if(eok)return eok.toLocaleString()+"억";if(man)return man.toLocaleString()+"만";return "1만 미만"}

@@ -1,0 +1,13 @@
+{
+  "version": "0.0027",
+  "verifiedComplete": false,
+  "results": [
+    {"step": "① 기능 구현 검수", "status": "PASS", "evidence": "v0_0027_greatsword_validation.js 13개 검사 통과"},
+    {"step": "② 체크리스트 검수", "status": "PASS", "evidence": "대검전사 패시브 9개, 공통 패시브 1개, 원본 스킬/폼 16개 및 단계별 26행 확인"},
+    {"step": "③ 숫자/계산 결과 대조", "status": "PASS", "evidence": "인수 문서의 주요 원본 수치와 단계 배열 일치, 모든 예상 피해 유한 양수"},
+    {"step": "④ 역검증", "status": "PASS", "evidence": "밤의 흔적 Lv.0 대비 Lv.38 스킬 피해 배율 1.0380000000000003"},
+    {"step": "⑤ UI 검수", "status": "미검증", "evidence": "브라우저 보안 정책이 로컬 file URL 실행을 차단하여 실제 화면 클릭/반응형 확인 불가"},
+    {"step": "⑥ 연결 검수", "status": "PASS", "evidence": "HTML data-class-toggle, app 상태/렌더러, DB 직업 ID, core 계산 함수 연결 정적 확인"},
+    {"step": "⑦ 회귀 테스트", "status": "PASS", "evidence": "core 자체검수 19개 통과, JavaScript 3개 문법 검사 및 git diff --check 통과"}
+  ]
+}

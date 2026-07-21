@@ -170,17 +170,21 @@ function derivedStats(state){
 
 function classEffects(db,state,preset){
   const e={};let directDps=0;
-  if(!state.classEnabled.swordsman)return{effects:e,directDps};
-  for(const p of db.classes[0].passives){
+  const enabled=Object.keys((state&&state.classEnabled)||{}).find(id=>state.classEnabled[id]&&db.classes.some(c=>c.id===id));
+  if(!enabled)return{effects:e,directDps,classId:""};
+  const classData=db.classes.find(c=>c.id===enabled);
+  for(const p of classData.passives){
     for(const[k,v]of Object.entries(p.effects||{})){
       let key=k,val=n(v);
       if(p.id==="rising_gale"&&k==="galePostureDamagePerStackPct"){key="galePostureDamagePct";val=n(v)*preset.gale}
-      if(p.id==="deepening_darkness"&&k==="nightTraceFinalDamage"){key="finalDamagePct";val=preset.nightTrace*(1.7/45)}
+      if(p.uptimeEnv)val*=clamp(state.env[p.uptimeEnv],0,1);
       add(e,key,val);
     }
     directDps+=n(p.directDps);
+    if(p.directDamage&&p.directDamage.damage&&p.directDamage.intervalSec)directDps+=n(p.directDamage.damage)/Math.max(0.5,n(p.directDamage.intervalSec));
   }
-  return{effects:e,directDps};
+  add(e,"finalDamagePct",clamp(state.env.nightTraceLevel,0,150)*0.1);
+  return{effects:e,directDps,classId:enabled};
 }
 
 function hasGiantFragment(rune){
@@ -507,9 +511,10 @@ function totalSkillDamage(skill){
   return n(skill.damage);
 }
 function skillCooldownSec(skill,state){
-  if(!skill)return 1;
-  if(skill.id==="ultimate_flash")return Math.max(1,n(state.env.ultimateCycleSec)||75);
-  let cd=n(skill.cooldownSec)||10;
+  if(!skill)return null;
+  if(skill.ultimateCost||skill.ultimateCycleEnv)return Math.max(1,n(state.env.ultimateCycleSec)||75);
+  if(!n(skill.cooldownSec))return null;
+  let cd=n(skill.cooldownSec);
   const focus=clamp(state.env.focusUptime,0,1);
   if(skill.focusCooldownSec)cd=cd*(1-focus)+n(skill.focusCooldownSec)*focus;
   return Math.max(0.5,cd);
@@ -557,18 +562,23 @@ function formulaV2Context(db,state,sel=state.selected,kind="avg"){
   };
 }
 function skillDamageRows(db,state,sel=state.selected,kind="avg"){
-  const skills=(((db.skills||{}).swordsman)||[]);
+  const classId=Object.keys((state&&state.classEnabled)||{}).find(id=>state.classEnabled[id]&&(db.skills||{})[id]);
+  const skills=classId?((db.skills||{})[classId]||[]):[];
   const ctx=formulaV2Context(db,state,sel,kind);
   const common=ctx.damageC*ctx.gemE*ctx.skillH*ctx.finalL*ctx.magicResistMultiplier;
-  return skills.map(skill=>{
-    const base=totalSkillDamage(skill);
+  return skills.flatMap(skill=>{
+    const variants=Array.isArray(skill.damageStages)?skill.damageStages.map((damage,index)=>({damage,stage:index+1})): [{damage:totalSkillDamage(skill),stage:0}];
+    return variants.map(variant=>{
+    const base=variant.damage;
     const tag=skillTagMultiplier(skill,ctx);
     const noCrit=base*common*tag;
     const crit=noCrit*ctx.critMultiplier;
     const breakDamage=noCrit*ctx.breakG;
     const breakExtension=crit*ctx.breakExtensionG;
     const cooldown=skillCooldownSec(skill,state);
-    return {id:skill.id,name:skill.name,form:skill.form||"",tags:skill.tags||[],baseDamage:base,noCrit,crit,breakDamage,breakExtension,cooldownSec:cooldown,damagePerMinute:noCrit*(60/cooldown),source:skill.source||"tooltip"};
+    const stageForm=variant.stage?String(skill.form||"기본").replace(/ · 1단계$/,'')+` · ${variant.stage}단계`:skill.form||"";
+    return {id:skill.id+(variant.stage?`_stage_${variant.stage}`:""),name:skill.name,form:stageForm,tags:skill.tags||[],baseDamage:base,noCrit,crit,breakDamage,breakExtension,cooldownSec:cooldown,damagePerMinute:cooldown?noCrit*(60/cooldown):null,source:skill.source||"tooltip"};
+    });
   });
 }
 
@@ -893,7 +903,7 @@ function validate(db){
 }
 
 function runSelfTest(db){
-  const state={selected:{...DEFAULT_SELECTED},baseline:{...DEFAULT_SELECTED},classEnabled:{swordsman:false},mode:"raid",stats:{...DEFAULT_STATS},env:{...DEFAULT_ENV}};
+  const state={selected:{...DEFAULT_SELECTED},baseline:{...DEFAULT_SELECTED},classEnabled:{swordsman:false,greatsword_warrior:false},mode:"raid",stats:{...DEFAULT_STATS},env:{...DEFAULT_ENV}};
   const val=validate(db);
   state.classEnabled.swordsman=true;
   const c1=calc(db,state,state.selected,"avg");
@@ -914,6 +924,10 @@ function runSelfTest(db){
   const utilityBase=normalizedValue(utilityDb,state,state.baseline,"avg").valueScore;
   const utilitySelected=normalizedValue(utilityDb,state,{...state.baseline,necklace:"accessory_utility_value_audit"},"avg").valueScore;
   const skillRows=skillDamageRows(db,state,state.selected,"avg");
+  state.classEnabled.swordsman=false;
+  state.classEnabled.greatsword_warrior=true;
+  const greatswordRows=skillDamageRows(db,state,state.selected,"avg");
+  const darkness38=classEffects(db,{...state,env:{...state.env,nightTraceLevel:38}},statePreset(state,"avg")).effects.finalDamagePct;
   const nightAvg=normalizedValue(db,state,{...state.selected,emblem:"emblem_gogyeol"},"avg").preset.night;
   const tests=[
     ...val.result,
@@ -922,7 +936,7 @@ function runSelfTest(db){
     {name:"어비스/레이드 모드 반응",pass:cRaid.score!==cAbyss.score,detail:`레이드 ${Math.round(cRaid.score)} / 어비스 ${Math.round(cAbyss.score)}`},
     {name:"레이드 5분 / 어비스 1분 전투시간 반영",pass:raidCombat.durationSec===300&&abyssCombat.durationSec===60,detail:`${raidCombat.label} ${raidCombat.durationSec}초 / ${abyssCombat.label} ${abyssCombat.durationSec}초`},
     {name:"직접DPS 산출",pass:Number.isFinite(c1.directDps)&&c1.directDps>=0,detail:Math.round(c1.directDps).toLocaleString()},
-    {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"마도저항과 무관한 장비 기준 100.00"},{name:"마도저항 피해 배율 공식",pass:Math.abs(magicResistanceEffect(state,"entry",0).multiplier-0.5)<0.0001&&magicResistanceEffect(state,"veryHard",4400).bonusPct===4.4,detail:"입문 저항0=0.5배 · 매우 어려움 저항4400=+4.4%"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`}
+    {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"마도저항과 무관한 장비 기준 100.00"},{name:"마도저항 피해 배율 공식",pass:Math.abs(magicResistanceEffect(state,"entry",0).multiplier-0.5)<0.0001&&magicResistanceEffect(state,"veryHard",4400).bonusPct===4.4,detail:"입문 저항0=0.5배 · 매우 어려움 저항4400=+4.4%"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"검술사 스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`},{name:"대검전사 스킬/차지 단계 산출",pass:greatswordRows.length===26&&greatswordRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${greatswordRows.length}개 표시 행`},{name:"깊어지는 어둠 Lv.38 공식",pass:Math.abs(darkness38-3.8)<0.0001,detail:`최종 데미지 +${darkness38}%`}
   ];
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }

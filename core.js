@@ -561,10 +561,12 @@ function formulaV2Context(db,state,sel=state.selected,kind="avg"){
     magicResistMultiplier:magicResistanceEffect(state).multiplier
   };
 }
-function skillDamageRows(db,state,sel=state.selected,kind="avg"){
-  const classId=Object.keys((state&&state.classEnabled)||{}).find(id=>state.classEnabled[id]&&(db.skills||{})[id]);
+function skillDamageRows(db,state,sel=state.selected,kind="avg",requestedClassId=""){
+  const classId=requestedClassId||Object.keys((state&&state.classEnabled)||{}).find(id=>state.classEnabled[id]&&(db.skills||{})[id])||"";
   const skills=classId?((db.skills||{})[classId]||[]):[];
-  const ctx=formulaV2Context(db,state,sel,kind);
+  const classEnabled=Object.fromEntries((db.classes||[]).map(row=>[row.id,row.id===classId&&!!(state.classEnabled||{})[classId]]));
+  const calculationState=requestedClassId?{...state,classEnabled}:state;
+  const ctx=formulaV2Context(db,calculationState,sel,kind);
   const common=ctx.damageC*ctx.gemE*ctx.skillH*ctx.finalL*ctx.magicResistMultiplier;
   return skills.flatMap(skill=>{
     const variants=Array.isArray(skill.damageStages)?skill.damageStages.map((damage,index)=>({damage,stage:index+1})): [{damage:totalSkillDamage(skill),stage:0}];
@@ -575,7 +577,7 @@ function skillDamageRows(db,state,sel=state.selected,kind="avg"){
     const crit=noCrit*ctx.critMultiplier;
     const breakDamage=noCrit*ctx.breakG;
     const breakExtension=crit*ctx.breakExtensionG;
-    const cooldown=skillCooldownSec(skill,state);
+    const cooldown=skillCooldownSec(skill,calculationState);
     const stageForm=variant.stage?String(skill.form||"기본").replace(/ · 1단계$/,'')+` · ${variant.stage}단계`:skill.form||"";
     return {id:skill.id+(variant.stage?`_stage_${variant.stage}`:""),name:skill.name,form:stageForm,tags:skill.tags||[],baseDamage:base,noCrit,crit,breakDamage,breakExtension,cooldownSec:cooldown,damagePerMinute:cooldown?noCrit*(60/cooldown):null,source:skill.source||"tooltip"};
     });

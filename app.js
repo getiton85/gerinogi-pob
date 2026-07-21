@@ -36,7 +36,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0027";
+if(appVersionEl)appVersionEl.textContent="v0.0028";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -267,7 +267,6 @@ function renderEquip(){
   });
 }
 
-function activeClassId(){return Object.keys(state.classEnabled||{}).find(id=>state.classEnabled[id])||""}
 function renderClass(){
   const buttons=document.querySelectorAll("[data-class-toggle]");
   buttons.forEach(button=>{
@@ -282,10 +281,11 @@ function renderClass(){
       renderAll();save();
     };
   });
-  const id=activeClassId(),classData=DB.classes.find(row=>row.id===id);
-  const title=document.getElementById("skillPanelTitle");
-  if(title)title.textContent=(classData?classData.name:"직업")+" 스킬 예상 데미지";
-  if(classPassiveList)classPassiveList.innerHTML=classData?classData.passives.map(p=>`<div class="passive-mini"><b>${p.name}</b><small>${p.note||""}</small></div>`).join(""):'<div class="passive-mini off"><b>직업을 선택해 주세요</b><small>검술사와 대검전사 중 하나만 적용됩니다.</small></div>';
+  DB.classes.forEach(classData=>{
+    const list=document.querySelector(`[data-class-passives="${classData.id}"]`);
+    const on=!!state.classEnabled[classData.id];
+    if(list)list.innerHTML=classData.passives.map(p=>`<div class="passive-mini ${on?"":"off"}"><b>${p.name}</b><small>${p.note||""}</small></div>`).join("");
+  });
 }
 
 
@@ -481,11 +481,15 @@ function renderMagicResistance(){
   presets.querySelectorAll("[data-magic-preset]").forEach(button=>button.onclick=()=>updateResistance(button.dataset.magicPreset));
   cards.querySelectorAll("[data-magic-difficulty]").forEach(button=>button.onclick=()=>{state.env.magicResistDifficulty=button.dataset.magicDifficulty;renderDashboard();renderComparison();renderRank();save()});
 }
-function renderSkillDamage(){
-  const panel=document.getElementById("skillDamagePanel");
+function renderSkillDamagePanel(classId){
+  const panel=document.querySelector(`[data-skill-panel="${classId}"]`);
   if(!panel||!POB.skillDamageRows)return;
-  const rows=POB.skillDamageRows(DB,state,state.selected,"avg");
-  panel.innerHTML=rows.length?rows.map(r=>`<div class="skill-card"><div class="skill-head"><div><b>${r.name}</b><small>${r.form||"기본"} · ${r.tags.join(" / ")}</small></div><span>${r.cooldownSec?r.cooldownSec.toFixed(1)+"초":"쿨타임 미제공"}</span></div><div class="skill-grid"><div><em>노크리</em><strong>${fmt(r.noCrit)}</strong></div><div><em>크리</em><strong>${fmt(r.crit)}</strong></div><div><em>브레이크</em><strong>${fmt(r.breakDamage)}</strong></div><div><em>브레이크 익스텐션</em><strong>${fmt(r.breakExtension)}</strong></div></div><p>${r.damagePerMinute?"1분 노크리 기준 "+fmt(r.damagePerMinute)+" · ":""}툴팁 피해 기반</p></div>`).join(""):'<div class="skill-empty">직업을 켜면 스킬 예상 데미지가 표시됩니다.</div>';
+  const rows=POB.skillDamageRows(DB,state,state.selected,"avg",classId);
+  panel.innerHTML=rows.map(r=>`<div class="skill-card"><div class="skill-head"><div><b>${r.name}</b><small>${r.form||"기본"} · ${r.tags.join(" / ")}</small></div><span>${r.cooldownSec?r.cooldownSec.toFixed(1)+"초":"쿨타임 미제공"}</span></div><div class="skill-grid"><div><em>노크리</em><strong>${fmt(r.noCrit)}</strong></div><div><em>크리</em><strong>${fmt(r.crit)}</strong></div><div><em>브레이크</em><strong>${fmt(r.breakDamage)}</strong></div><div><em>브레이크 익스텐션</em><strong>${fmt(r.breakExtension)}</strong></div></div><p>${r.damagePerMinute?"1분 노크리 기준 "+fmt(r.damagePerMinute)+" · ":""}툴팁 피해 기반 · 패시브 ${state.classEnabled[classId]?"ON":"OFF"}</p></div>`).join("");
+}
+function renderSkillDamage(){
+  renderSkillDamagePanel("swordsman");
+  renderSkillDamagePanel("greatsword_warrior");
 }
 const COMPARE_SLOT_LABELS={emblem:"엠블럼",weapon:"무기",head:"머리",top:"상의",bottom:"하의",gloves:"장갑",shoes:"신발"};
 function fmtCombat(v){const value=Math.max(0,Math.floor(n(v)));const eok=Math.floor(value/100000000);const man=Math.floor((value%100000000)/10000);if(eok&&man)return eok.toLocaleString()+"억 "+man.toLocaleString()+"만";if(eok)return eok.toLocaleString()+"억";if(man)return man.toLocaleString()+"만";return "1만 미만"}

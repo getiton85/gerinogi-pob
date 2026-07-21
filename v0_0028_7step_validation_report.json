@@ -1,0 +1,13 @@
+{
+  "version": "0.0028",
+  "verifiedComplete": false,
+  "results": [
+    {"step": "① 기능 구현 검수", "status": "PASS", "evidence": "직업별 독립 패널 검증 10개 통과"},
+    {"step": "② 체크리스트 검수", "status": "PASS", "evidence": "두 패널 상시 표시, 개별 ON/OFF, 동시 ON 차단 확인"},
+    {"step": "③ 숫자/계산 결과 대조", "status": "PASS", "evidence": "검술사 OFF 9행, 대검전사 OFF 26행 모두 유한 양수"},
+    {"step": "④ 역검증", "status": "PASS", "evidence": "각 직업 ON과 OFF의 첫 스킬 예상 피해가 서로 다름"},
+    {"step": "⑤ UI 검수", "status": "미검증", "evidence": "로컬 페이지 실제 화면 검수 대기"},
+    {"step": "⑥ 연결 검수", "status": "PASS", "evidence": "각 HTML 패널과 직업 ID 지정 렌더러 연결 확인"},
+    {"step": "⑦ 회귀 테스트", "status": "PASS", "evidence": "기존 core 자체검수 및 JavaScript 문법 검사 통과"}
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "version": "0.0027",
-  "display": "v0.0027",
-  "note": "Adds mutually exclusive Swordsman and Greatsword Warrior selection, verified Greatsword Warrior skill/passive data, staged charge damage, and the shared Deepening Darkness formula."
+  "version": "0.0028",
+  "display": "v0.0028",
+  "note": "Separates Swordsman and Greatsword Warrior into independent skill panels that remain visible while OFF, with mutually exclusive passive toggles."
 }

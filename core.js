@@ -124,6 +124,10 @@ function tagFocusAdjustment(db,state,sel){
   const baselineScore=selectionFocusScore(db,state.baseline,focus);
   return{multiplier:clamp(1+(score-baselineScore)*0.18,0.65,1.85),score,baselineScore,active:focus};
 }
+function relativePercent(candidate,current){
+  const base=n(current);
+  return base!==0?(n(candidate)/base*100)-100:0;
+}
 function slotValueDelta(db,state,slot,runeId,kind="avg"){
   const currentId=(state.selected&&state.selected[slot])||"";
   const candidateId=runeId||"";
@@ -131,7 +135,7 @@ function slotValueDelta(db,state,slot,runeId,kind="avg"){
   const current=normalizedValue(db,state,state.selected,kind);
   const candidateSel={...state.selected,[slot]:candidateId};
   const candidate=normalizedValue(db,state,candidateSel,kind);
-  const baseDiff=candidate.valueScore-current.valueScore;
+  const baseDiff=relativePercent(candidate.valueScore,current.valueScore);
   const activeTags=normalizeFocusTags(state&&state.focusTags);
   const currentRune=runeById(db,currentId);
   const candidateRune=runeById(db,candidateId);
@@ -272,10 +276,11 @@ function calc(db,state,sel=state.selected,kind="avg"){
   const directDps=rCur.directDps+cEff.directDps;
   const baseRune=runeEffects(db,state,selectedRunes(db,state.baseline),preset,baseContext).effects;
   const attackDiff=n(rCur.effects.attackPct)-n(baseRune.attackPct);
+  const flatAttackDiff=n(rCur.effects.flatAttack)-n(baseRune.flatAttack);
   const base=derivedStats(state);
 
-  const projectedAttack=(n(state.stats.attack)+n(effects.flatAttack))*(1+attackDiff/100)*(1+n(cEff.effects.attackPct)/100)*VALUE_WEIGHTS.attack;
-  const defense=n(state.stats.defense);
+  const projectedAttack=(n(state.stats.attack)+flatAttackDiff)*(1+attackDiff/100)*(1+n(cEff.effects.attackPct)/100)*VALUE_WEIGHTS.attack;
+  const defense=n(state.stats.defense)*(1+n(effects.defensePct)/100);
   const critChance=Math.min(100,n(base.critBase)+n(effects.critChancePct));
   const extraChance=Math.min(100,n(base.extraBase)+n(effects.extraHitChancePct));
   const critDamage=n(state.stats.critDamageBase)+n(effects.critDamagePct);
@@ -283,11 +288,11 @@ function calc(db,state,sel=state.selected,kind="avg"){
   const multiDamage=n(base.multiBase)+n(effects.multiHitDamagePct);
 
   const enemyDamage=n(effects.enemyDamagePct)+n(effects.targetIncomingDamageIncreasePct)+n(effects.damagePct);
-  const unarmored=n(effects.unarmoredDamagePct)*n(state.env.unarmoredUptime);
+  const unarmored=(n(effects.unarmoredDamagePct)+n(effects.breakExtraDamagePct))*n(state.env.unarmoredUptime);
   const gemDamage=gemDamagePct(state);
   const finalDamage=n(effects.finalDamagePct);
   const galeDamage=n(effects.galePostureDamagePct);
-  const skillDamage=n(effects.skillDamagePct)+n(effects.ultimateSkillDamagePct)+n(effects.castingSkillDamagePct)+n(effects.chargeSkillDamagePct)+n(effects.channelingSkillDamagePct)+n(effects.breakSkillDamagePct)+n(effects.resourceConsumingSkillDamagePct)+n(effects.activeSlot3SkillDamagePct);
+  const skillDamage=n(effects.skillDamagePct)+n(effects.ultimateDamagePct)+n(effects.ultimateSkillDamagePct)+n(effects.castingSkillDamagePct)+n(effects.chargeSkillDamagePct)+n(effects.channelingSkillDamagePct)+n(effects.breakSkillDamagePct)+n(effects.resourceConsumingSkillDamagePct)+n(effects.activeSlot3SkillDamagePct)+n(effects.comboDamagePct);
   const speedBonus=n(effects.skillSpeedPct)+n(effects.castingSpeedPct)+n(effects.chargeSpeedPct)+n(effects.cooldownRecoveryPct)+n(base.fastSkillPct)*0.10;
   const utilityBonus=n(base.breakPct)*0.03+n(base.comboPct)*0.02+n(base.skillPowerPct)*0.04+n(base.areaPowerPct)*0.02+n(base.ultimatePowerPct)*0.03;
   const survivalBonus=n(base.damageReducePct)*0.015+n(base.extraHpPct)*0.01+n(base.weakpointDodgePct)*0.01;
@@ -314,54 +319,23 @@ function calc(db,state,sel=state.selected,kind="avg"){
 
 function expectedDamageScore(db,state,sel=state.selected,kind="avg"){
   const c=calc(db,state,sel,kind);
-  const s=state.stats||DEFAULT_STATS;
-  const d=derivedStats({...state,stats:s});
-  const e=c.effects||{};
-
-  const attackBase=Math.max(1,n(s.attack)||1);
-  const attackFlat=n(e.attackFlat);
-  const attackPct=n(e.attackPct);
-  const attackAxis=(attackBase+attackFlat)*(1+attackPct/100);
-
-  const generalPct =
-    n(e.damageToEnemyPct)+n(e.enemyDamagePct)+n(e.targetIncomingDamageIncreasePct)+n(e.damagePct)+
-    n(e.unarmoredDamagePct)*n(state.env.unarmoredUptime)+n(e.finalDamagePct)+n(e.galePostureDamagePct)+
-    n(e.skillDamagePct)+
-    n(e.braveDamagePct)+n(e.vulnerableDamagePct)+n(e.unshieldedDamagePct)+
-    n(e.defenseBreakDamagePct)+n(e.dotDamagePct)+n(e.breakSkillDamagePct)+
-    n(e.channelingDamagePct)+n(e.channelingSkillDamagePct)+n(e.castingSkillDamagePct)+
-    n(e.chargeSkillDamagePct)+n(e.resourceConsumingSkillDamagePct)+
-    n(e.activeSlot3SkillDamagePct)+n(e.ultimateSkillDamagePct);
-
-  const tagPct =
-    n(e.strongDamagePct)+n(e.strongHitDamagePct)+
-    n(e.multiDamagePct)+n(e.multiHitDamagePct)+
-    n(e.finalStrongDamagePct)+n(e.finalMultiDamagePct)+
-    n(e.ultimateDamagePct)+n(e.ultimateSkillDamagePct);
-
-  const utilityPct =
-    n(d.breakPct)*0.35+n(d.skillPowerPct)*0.75+n(d.areaPowerPct)*0.30+
-    n(d.ultimatePowerPct)*0.25;
-
-  const damageAxis=(1+generalPct/100)*(1+gemDamagePct(state)/100)*(1+tagPct/100)*(1+utilityPct/100);
-
-  const critChance=Math.min(100,Math.max(0,n(c.critChance)));
-  const critDamage=Math.max(100,n(c.critDamage)||300);
-  const critAxis=1+(critChance/100)*((critDamage/100)-1);
-
-  const extraChance=Math.min(100,Math.max(0,n(c.extraChance)));
-  const extraAxis=1+extraChance/100;
-
-  const cyclePct=0;
+  const baseWeightedAttack=Math.max(1,n(state.stats&&state.stats.attack)*VALUE_WEIGHTS.attack);
+  const attackScoreAxis=c.projectedAttack;
+  const attackAxis=attackScoreAxis/baseWeightedAttack;
+  const damageAxis=(1+c.enemyDamage/100)*(1+c.unarmored/100)*(1+c.gemDamagePct/100)*(1+c.finalDamage/100)*(1+c.galeDamage/100)*(1+c.skillDamage/300)*(1+c.utilityBonus/100);
+  const critAxis=1+((c.critChance*VALUE_WEIGHTS.critChance)/100)*((c.critDamage*VALUE_WEIGHTS.critDamage)/100-1);
+  const extraAxis=1+((c.extraChance*VALUE_WEIGHTS.extraChance)/100)*0.55;
+  const strongAxis=1+(c.strongDamage/100)*0.35;
+  const multiAxis=1+(c.multiDamage/100)*0.25;
   const cycleAxis=1;
-
-  const directAxis=1+Math.min(0.35,Math.max(0,n(c.directDps))/(attackBase*8));
-  const survivalAxis=1+(n(d.damageReducePct)*0.05+n(d.extraHpPct)*0.02+n(d.weakpointDodgePct)*0.02)/100;
-
-  const score=attackAxis*damageAxis*critAxis*extraAxis*cycleAxis*directAxis*survivalAxis;
+  const survivalAxis=1+c.survivalBonus/100;
+  const nonDirectScore=Math.max(1,c.score-c.directDps);
+  const directAxis=c.score/nonDirectScore;
+  const directDamage=c.directDps;
+  const score=c.score;
   return {
     score,
-    axes:{attackAxis,damageAxis,critAxis,extraAxis,cycleAxis,directAxis,survivalAxis,generalPct,tagPct,utilityPct,critChance,critDamage,extraChance},
+    axes:{attackAxis,attackScoreAxis,damageAxis,critAxis,extraAxis,strongAxis,multiAxis,cycleAxis,directAxis,survivalAxis,directDamage,utilityBonus:c.utilityBonus,critChance:c.critChance,critDamage:c.critDamage,extraChance:c.extraChance},
     calc:c
   };
 }
@@ -701,7 +675,7 @@ function comparisonSummary(db,state,compareSel=state.compareSelected||state.sele
     compare,
     currentClass,
     compareClass,
-    valueDiffPct:compare.valueScore-current.valueScore,
+    valueDiffPct:relativePercent(compare.valueScore,current.valueScore),
     dpsDiffPct:(compare.combat.adjustedDpsScore/dpsBase*100)-100,
     totalDiffPct:(compare.combat.totalScore/totalBase*100)-100,
     durationSec:combatDurationSec(state),

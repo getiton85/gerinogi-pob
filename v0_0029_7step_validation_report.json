@@ -1,0 +1,13 @@
+{
+  "version": "0.0029",
+  "verifiedComplete": false,
+  "results": [
+    {"step": "① 기능 구현 검수", "status": "PASS", "evidence": "밸류 단일 계산 원본과 현재 대비 비율 계산 적용"},
+    {"step": "② 체크리스트 검수", "status": "PASS", "evidence": "v16 기준 100, v23 단위 보정, 유틸 제외, 마도저항 비개입 유지"},
+    {"step": "③ 숫자/계산 결과 대조", "status": "PASS", "evidence": "전체 룬 179개 유한 양수, 기준 점수 100.00"},
+    {"step": "④ 역검증", "status": "PASS", "evidence": "후보 룬 정방향·역방향 변화율 곱 1.0"},
+    {"step": "⑤ UI 검수", "status": "미검증", "evidence": "실제 배포 화면에서 v0.0029 표시와 사용자 저장 상태 확인 필요"},
+    {"step": "⑥ 연결 검수", "status": "PASS", "evidence": "후보 룬과 비교 세팅 모두 동일 현재 대비 비율 4.078572158793477%"},
+    {"step": "⑦ 회귀 테스트", "status": "PASS", "evidence": "자체검수 19개, 숫자·역산·연결·직업 패널 검사 통과"}
+  ]
+}

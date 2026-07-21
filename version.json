@@ -1,5 +1,5 @@
 {
-  "version": "0.0028",
-  "display": "v0.0028",
-  "note": "Separates Swordsman and Greatsword Warrior into independent skill panels that remain visible while OFF, with mutually exclusive passive toggles."
+  "version": "0.0029",
+  "display": "v0.0029",
+  "note": "Unifies value scoring under one calculation path and fixes current-relative percentage display, flat attack baseline handling, duplicated axes, and omitted combat effects."
 }

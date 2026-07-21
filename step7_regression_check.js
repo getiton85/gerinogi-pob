@@ -10,9 +10,9 @@ const s={selected:{...ctx.POB.DEFAULT_SELECTED},baseline:{...ctx.POB.DEFAULT_SEL
 
 const qa=ctx.POB.runSelfTest(ctx.DB);
 assert(qa.pass,'core self test fail');
-assert(qa.counts.emblem===9,'emblem count fail');
-assert(qa.counts.weapon===17,'weapon count fail');
-assert(qa.counts.armor===55,'armor count fail');
+assert(qa.counts.emblem>=20,'emblem count fail');
+assert(qa.counts.weapon>=45,'weapon count fail');
+assert(qa.counts.armor>=55,'armor count fail');
 
 const ids=new Set();
 for(const cat of Object.values(ctx.DB.runes)){

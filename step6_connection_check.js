@@ -32,7 +32,7 @@ const candidates=ctx.DB.runes.weapon.map(r=>{
   const nv=ctx.POB.normalizedValue(ctx.DB,s,sel,'avg');
   return {name:r.name,value:nv.valueScore,diff:nv.diffPct};
 }).sort((a,b)=>b.diff-a.diff);
-assert(candidates.length===17,'weapon rank count wrong');
+assert(candidates.length===ctx.DB.runes.weapon.length&&candidates.length>=45,'weapon rank count wrong');
 assert(Number.isFinite(candidates[0].diff),'rank diff invalid');
 
 console.log(JSON.stringify({

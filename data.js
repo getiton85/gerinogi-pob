@@ -100,7 +100,7 @@ const DB = {
         {"id":"retaliation","name":"보복","effects":{},"note":"체력 10% 소모마다 공격력 +5% 중첩 · 최대 100중첩 · 15초"},
         {"id":"melee","name":"난투","effects":{},"note":"공격 적중 시 보복 중첩당 체력 3,346 회복"},
         {"id":"crushed_wound","name":"뭉개진 상처","effects":{},"directDamage":{"min":47223,"max":94447,"maxAtTargetHpPct":30},"note":"#보조 #방해 · 적 체력이 낮을수록 47,223~94,447 지속 피해"},
-        {"id":"merciless_blade","name":"무자비한 칼날","effects":{},"note":"맹공 보유 시 피해 +25%, 강타 강화 비례 최대 +25% · 미보유 시 스킬 속도 +10%, 강타 강화 비례 최대 +20% (상한 5,000)"},
+        {"id":"merciless_blade","name":"무자비한 칼날","effects":{"skillDamagePct":25},"strongScaling":{"statCap":5000,"maxSkillDamagePct":25},"note":"맹공 보유 시 피해 +25%, 강타 강화 비례 최대 +25% · 미보유 시 스킬 속도 +10%, 강타 강화 비례 최대 +20% (상한 5,000)"},
         {"id":"night_blessing","name":"밤의 축복","effects":{"attackPct":15},"uptimeEnv":"nightBlessingUptime","note":"전투 템포 최대 시 15초 동안 공격력 +15% · 재사용 60초"},
         {"id":"belly_breaker","name":"배 부수기","effects":{},"directDamage":{"damage":74208,"intervalSec":10},"note":"공격 적중 시 74,208 추가 피해 · 브레이크 1칸 · 대상별 재사용 10초"},
         {"id":"deepening_darkness","name":"깊어지는 어둠","common":true,"note":"공통 시즌 패시브 · 밤의 흔적 레벨당 최종 데미지 +0.1% (최대 150레벨)"}

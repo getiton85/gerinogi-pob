@@ -1,0 +1,13 @@
+{
+  "version": "0.0030",
+  "verifiedComplete": false,
+  "results": [
+    {"step": "① 기능 구현 검수", "status": "PASS", "evidence": "무자비한 칼날 스킬 피해를 대검전사 classEffects에 연결"},
+    {"step": "② 체크리스트 검수", "status": "PASS", "evidence": "기본 +25%, 강타 강화 비례 최대 +25%, 능력치 상한 5,000 확인"},
+    {"step": "③ 숫자/계산 결과 대조", "status": "PASS", "evidence": "강타 강화 0/2,500/5,000에서 스킬계수 25/37.5/50%"},
+    {"step": "④ 역검증", "status": "PASS", "evidence": "강타 강화 7,500에서도 스킬계수 50% 상한 유지"},
+    {"step": "⑤ UI 검수", "status": "미검증", "evidence": "v0.0030 배포 후 대시보드 스킬계수 표시 확인 필요"},
+    {"step": "⑥ 연결 검수", "status": "PASS", "evidence": "대검전사 ON 시 대시보드 rawScore와 첫 스킬 예상 피해 모두 증가"},
+    {"step": "⑦ 회귀 테스트", "status": "PASS", "evidence": "기존 자체검수 19개 및 직업 패널·밸류 수식 검사 통과"}
+  ]
+}

@@ -36,7 +36,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0029";
+if(appVersionEl)appVersionEl.textContent="v0.0030";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){

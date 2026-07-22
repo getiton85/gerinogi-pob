@@ -184,6 +184,11 @@ function classEffects(db,state,preset){
       if(p.uptimeEnv)val*=clamp(state.env[p.uptimeEnv],0,1);
       add(e,key,val);
     }
+    if(p.id==="merciless_blade"&&p.strongScaling){
+      const cap=Math.max(1,n(p.strongScaling.statCap));
+      const ratio=clamp(n(state.stats&&state.stats.strongStat)/cap,0,1);
+      add(e,"skillDamagePct",n(p.strongScaling.maxSkillDamagePct)*ratio);
+    }
     directDps+=n(p.directDps);
     if(p.directDamage&&p.directDamage.damage&&p.directDamage.intervalSec)directDps+=n(p.directDamage.damage)/Math.max(0.5,n(p.directDamage.intervalSec));
   }

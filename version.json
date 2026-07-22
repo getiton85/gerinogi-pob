@@ -1,5 +1,5 @@
 {
-  "version": "0.0029",
-  "display": "v0.0029",
-  "note": "Unifies value scoring under one calculation path and fixes current-relative percentage display, flat attack baseline handling, duplicated axes, and omitted combat effects."
+  "version": "0.0030",
+  "display": "v0.0030",
+  "note": "Connects Greatsword Warrior Merciless Blade base and strong-stat scaling damage to dashboard skill coefficient and expected skill damage."
 }

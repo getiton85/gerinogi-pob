@@ -506,7 +506,10 @@ function skillTagMultiplier(skill,ctx){
   if(tags.has("광역"))m*=factorPct(ctx.areaDamage);
   if(tags.has("궁극기"))m*=factorPct(ctx.ultimateDamage);
   if(tags.has("비검"))m*=factorPct(ctx.flyingSwordDamage);
-  if(tags.has("스킬"))m*=factorPct(ctx.skillDamage);
+  if(tags.has("브레이크")||n(skill.breakGauge)>0)m*=factorPct(ctx.breakSkillDamage);
+  if(n(skill.chargeSecPerStage)>0)m*=factorPct(ctx.chargeSkillDamage);
+  if(n(skill.tempoCost)>0)m*=factorPct(ctx.resourceSkillDamage);
+  if(tags.has("연계"))m*=factorPct(ctx.comboDamage);
   return m;
 }
 function formulaV2Context(db,state,sel=state.selected,kind="avg"){
@@ -526,7 +529,7 @@ function formulaV2Context(db,state,sel=state.selected,kind="avg"){
     critMultiplier,
     breakG:factorPct(c.breakPct+n(c.unarmored)),
     breakExtensionG:factorPct(c.breakPct+(n(c.unarmored)*Math.max(1,n(state.env.breakExtensionMultiplier)||2))),
-    skillH:factorPct(c.skillDamage),
+    skillH:factorPct(n(e.skillDamagePct)),
     defenseI:1,
     counterJ:1,
     extraK:1+clamp(c.extraChance,0,100)/100,
@@ -536,7 +539,11 @@ function formulaV2Context(db,state,sel=state.selected,kind="avg"){
     areaDamage:n(d.areaPowerPct),
     ultimateDamage:n(d.ultimatePowerPct)+n(e.ultimateDamagePct)+n(e.ultimateSkillDamagePct),
     flyingSwordDamage:n(e.flyingSwordDamagePct),
-    skillDamage:c.skillDamage,
+    skillDamage:n(e.skillDamagePct),
+    breakSkillDamage:n(e.breakSkillDamagePct),
+    chargeSkillDamage:n(e.chargeSkillDamagePct),
+    resourceSkillDamage:n(e.resourceConsumingSkillDamagePct),
+    comboDamage:n(e.comboDamagePct),
     magicResistMultiplier:magicResistanceEffect(state).multiplier
   };
 }
@@ -558,9 +565,27 @@ function skillDamageRows(db,state,sel=state.selected,kind="avg",requestedClassId
     const breakExtension=crit*ctx.breakExtensionG;
     const cooldown=skillCooldownSec(skill,calculationState);
     const stageForm=variant.stage?String(skill.form||"기본").replace(/ · 1단계$/,'')+` · ${variant.stage}단계`:skill.form||"";
-    return {id:skill.id+(variant.stage?`_stage_${variant.stage}`:""),name:skill.name,form:stageForm,tags:skill.tags||[],baseDamage:base,noCrit,crit,breakDamage,breakExtension,cooldownSec:cooldown,damagePerMinute:cooldown?noCrit*(60/cooldown):null,source:skill.source||"tooltip"};
+    const expected=noCrit*ctx.critExpectedF;
+    return {id:skill.id+(variant.stage?`_stage_${variant.stage}`:""),name:skill.name,form:stageForm,tags:skill.tags||[],baseDamage:base,noCrit,crit,expected,breakDamage,breakExtension,cooldownSec:cooldown,damagePerMinute:cooldown?noCrit*(60/cooldown):null,source:skill.source||"tooltip"};
     });
   });
+}
+
+function activeSkillClassId(db,state){
+  return Object.keys((state&&state.classEnabled)||{}).find(id=>state.classEnabled[id]&&(db.skills||{})[id])||"";
+}
+
+function classSkillSummary(db,state,sel=state.selected,kind="avg",requestedClassId=""){
+  const classId=requestedClassId||activeSkillClassId(db,state);
+  if(!classId)return {classId:"",className:"미선택",rowCount:0,averageExpected:0,baselineAverageExpected:0,equipmentIndex:100,diffPct:0};
+  const rows=skillDamageRows(db,state,sel,kind,classId);
+  const baselineRows=skillDamageRows(db,state,state.baseline,kind,classId);
+  const average=list=>list.length?list.reduce((sum,row)=>sum+n(row.expected),0)/list.length:0;
+  const averageExpected=average(rows);
+  const baselineAverageExpected=average(baselineRows);
+  const equipmentIndex=baselineAverageExpected>0?averageExpected/baselineAverageExpected*100:100;
+  const classRow=(db.classes||[]).find(row=>row.id===classId);
+  return {classId,className:classRow?classRow.name:classId,rowCount:rows.length,averageExpected,baselineAverageExpected,equipmentIndex,diffPct:equipmentIndex-100};
 }
 
 function runeSeasonLabel(rune){
@@ -673,6 +698,9 @@ function comparisonSummary(db,state,compareSel=state.compareSelected||state.sele
   const compare=normalizedValue(db,state,compareSel,kind);
   const currentClass=classifySelection(db,state.selected,state);
   const compareClass=classifySelection(db,compareSel,state);
+  const skillClassId=activeSkillClassId(db,state);
+  const currentSkill=classSkillSummary(db,state,state.selected,kind,skillClassId);
+  const compareSkill=classSkillSummary(db,state,compareSel,kind,skillClassId);
   const dpsBase=current.combat.adjustedDpsScore||1;
   const totalBase=current.combat.totalScore||1;
   return {
@@ -680,6 +708,9 @@ function comparisonSummary(db,state,compareSel=state.compareSelected||state.sele
     compare,
     currentClass,
     compareClass,
+    currentSkill,
+    compareSkill,
+    skillDiffPct:currentSkill.averageExpected>0?relativePercent(compareSkill.averageExpected,currentSkill.averageExpected):0,
     valueDiffPct:relativePercent(compare.valueScore,current.valueScore),
     dpsDiffPct:(compare.combat.adjustedDpsScore/dpsBase*100)-100,
     totalDiffPct:(compare.combat.totalScore/totalBase*100)-100,
@@ -908,6 +939,7 @@ function runSelfTest(db){
   state.classEnabled.swordsman=false;
   state.classEnabled.greatsword_warrior=true;
   const greatswordRows=skillDamageRows(db,state,state.selected,"avg");
+  const greatswordSummary=classSkillSummary(db,state,state.selected,"avg","greatsword_warrior");
   const darkness38=classEffects(db,{...state,env:{...state.env,nightTraceLevel:38}},statePreset(state,"avg")).effects.finalDamagePct;
   const nightAvg=normalizedValue(db,state,{...state.selected,emblem:"emblem_gogyeol"},"avg").preset.night;
   const tests=[
@@ -919,9 +951,13 @@ function runSelfTest(db){
     {name:"직접DPS 산출",pass:Number.isFinite(c1.directDps)&&c1.directDps>=0,detail:Math.round(c1.directDps).toLocaleString()},
     {name:"두 번째 스탯창 대시보드 반영",pass:cChanged.score!==c1.score,detail:`기준 ${Math.round(c1.score)} / 변경 ${Math.round(cChanged.score)}`},{name:"밸류점수 100 기준 정규화",pass:Math.abs(normalizedValue(db,state,state.baseline,"avg").valueScore-100)<0.0001,detail:"마도저항과 무관한 장비 기준 100.00"},{name:"마도저항 피해 배율 공식",pass:Math.abs(magicResistanceEffect(state,"entry",0).multiplier-0.5)<0.0001&&magicResistanceEffect(state,"veryHard",4400).bonusPct===4.4,detail:"입문 저항0=0.5배 · 매우 어려움 저항4400=+4.4%"},{name:"고밸류 스탯 보정 적용",pass:VALUE_WEIGHTS.critChance>1&&VALUE_WEIGHTS.extraChance>1&&VALUE_WEIGHTS.critDamage>1&&VALUE_WEIGHTS.attack>1,detail:`공격 ${VALUE_WEIGHTS.attack} / 치명 ${VALUE_WEIGHTS.critChance} / 추가타 ${VALUE_WEIGHTS.extraChance} / 치피 ${VALUE_WEIGHTS.critDamage}`},{name:"속도/쿨감/회복 직접 밸류 제외",pass:Math.abs(utilitySelected-utilityBase)<0.0001,detail:`기준 ${utilityBase.toFixed(2)} / 유틸 ${utilitySelected.toFixed(2)}`},{name:"밤의 축복 평균 유지율 25%",pass:Math.abs(nightAvg-0.25)<0.0001,detail:`평균 ${nightAvg}`},{name:"검술사 스킬 예상 데미지 산출",pass:skillRows.length>=9&&skillRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${skillRows.length}개 스킬`},{name:"대검전사 스킬/차지 단계 산출",pass:greatswordRows.length===26&&greatswordRows.every(r=>Number.isFinite(r.noCrit)&&r.noCrit>0&&Number.isFinite(r.crit)&&r.crit>=r.noCrit),detail:`${greatswordRows.length}개 표시 행`},{name:"깊어지는 어둠 Lv.38 공식",pass:Math.abs(darkness38-3.8)<0.0001,detail:`최종 데미지 +${darkness38}%`}
   ];
+  tests.push(
+    {name:"대검전사 대시보드 스킬 요약 연결",pass:greatswordSummary.rowCount===26&&Number.isFinite(greatswordSummary.averageExpected)&&greatswordSummary.averageExpected>0,detail:`${greatswordSummary.rowCount}행 평균 ${Math.round(greatswordSummary.averageExpected).toLocaleString()}`},
+    {name:"저장 기준 장비 스킬 지수 100",pass:Math.abs(classSkillSummary(db,state,state.baseline,"avg","greatsword_warrior").equipmentIndex-100)<0.0001,detail:"기준 장비 100.00"}
+  );
   return{counts:val.counts,tests,pass:tests.every(t=>t.pass)};
 }
 
-return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,MAGIC_RESIST_PROFILES,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,magicResistProfile,magicResistanceEffect,mechanicProfile,formulaV2Context,skillDamageRows,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,damageTimelinePoints,expectedDamageTimeline,diminishingPoints,validate,runSelfTest};
+return{SLOT_CAT,DEFAULT_SELECTED,DEFAULT_STATS,DEFAULT_ENV,MAGIC_RESIST_PROFILES,TAG_FOCUS,VALUE_WEIGHTS,NON_DAMAGE_VALUE_EFFECT_KEYS,derivedStats,allRunes,runeById,selectedRunes,calc,normalizedValue,combatProfile,combatDurationSec,combatDpsSummary,magicResistProfile,magicResistanceEffect,mechanicProfile,formulaV2Context,skillDamageRows,activeSkillClassId,classSkillSummary,gemDamagePct,selectionFocusScore,runeFocusScore,slotValueDelta,runeSeasonLabel,classifyRune,classifySelection,comparisonSummary,damageTimelinePoints,expectedDamageTimeline,diminishingPoints,validate,runSelfTest};
 })();
 if(typeof module!=="undefined") module.exports = POB;

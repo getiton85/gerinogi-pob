@@ -1,5 +1,5 @@
 {
-  "version": "0.0030",
-  "display": "v0.0030",
-  "note": "Connects Greatsword Warrior Merciless Blade base and strong-stat scaling damage to dashboard skill coefficient and expected skill damage."
+  "version": "0.0031",
+  "display": "v0.0031",
+  "note": "Connects the active class skill portfolio to dashboard and equipment comparison, while separating common and conditional skill multipliers."
 }

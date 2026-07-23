@@ -36,7 +36,7 @@ let state=loadInitialState();
 const brandTitle=document.querySelector(".brand h1");
 const appVersionEl=document.getElementById("appVersion");
 if(brandTitle)brandTitle.textContent="게리롱 멋대로 POB식 밸류";
-if(appVersionEl)appVersionEl.textContent="v0.0030";
+if(appVersionEl)appVersionEl.textContent="v0.0031";
 function save(){
   state=normalizeState(state);
   if(activeProfile&&activeProfile.nickname){
@@ -403,6 +403,7 @@ function renderDashboard(){
   scoreValue.textContent=(Math.round(cAvg.valueScore*100)/100).toFixed(2);
   stateCards.innerHTML=[cMin,cAvg,cMax].map(c=>`<div class="state-card"><b>${c.preset.name}</b><span>${(Math.round(c.valueScore*100)/100).toFixed(2)}</span><small>${c.diffPct>=0?"+":""}${(Math.round(c.diffPct*100)/100).toFixed(2)}% / ${c.combat.label} / 실전 ${pct(c.combat.reliability*100)}</small></div>`).join("");
   const c=cAvg,combat=c.combat||POB.combatDpsSummary(DB,state,state.selected,"avg");
+  const skillSummary=POB.classSkillSummary(DB,state,state.selected,"avg");
   const magicResist=combat.magicResist||POB.magicResistanceEffect(state);
   const items=[
     ["전투 기준",combat.label],
@@ -412,6 +413,10 @@ function renderDashboard(){
     ["실전 보정",pct(combat.reliability*100)],
     ["DPS 기준",fmtLarge(combat.adjustedDpsScore)],
     ["총 기대딜",fmtLarge(combat.totalScore)],
+    ["적용 직업",skillSummary.className],
+    ["직업 스킬 평균",skillSummary.rowCount?fmt(skillSummary.averageExpected):"-"],
+    ["직업 스킬 장비지수",skillSummary.rowCount?(Math.round(skillSummary.equipmentIndex*100)/100).toFixed(2):"-"],
+    ["스킬 반영 행",skillSummary.rowCount?skillSummary.rowCount+"개":"-"],
     ["마도저항",fmt(magicResist.resistance)],
     ["저항 피해배율",plusPct(magicResist.bonusPct)],
     ["공격력",fmt(c.projectedAttack)],
@@ -590,7 +595,7 @@ function renderCompareEquip(){
   const copyBtn=document.getElementById("copyCompareBtn");
   if(copyBtn)copyBtn.onclick=e=>{e.preventDefault();e.stopPropagation();state.compareSelected=JSON.parse(JSON.stringify(state.selected));renderCompareEquip();renderComparison();save()}
 }
-function renderComparison(){const summaryBox=document.getElementById("compareSummary");const chart=document.getElementById("compareChart");if(!summaryBox&&!chart)return;ensureCompareSelection();const s=POB.comparisonSummary(DB,state,state.compareSelected,"avg");const compareNames=Object.keys(COMPARE_SLOT_LABELS).filter(slot=>state.selected[slot]!==state.compareSelected[slot]).map(slot=>{const r=runeByIdLocal(state.compareSelected[slot]);return `${COMPARE_SLOT_LABELS[slot]}: ${r?r.name:"없음"}`});if(summaryBox){summaryBox.innerHTML=[["밸류 차이",plusPct(s.valueDiffPct)],["DPS 차이",plusPct(s.dpsDiffPct)],["총 기대딜 차이",plusPct(s.totalDiffPct)],["현재 DPS",fmtCombat(s.current.combat.adjustedDpsScore)],["비교 DPS",fmtCombat(s.compare.combat.adjustedDpsScore)],["현재 총 기대딜",fmtCombat(s.current.combat.totalScore)],["비교 총 기대딜",fmtCombat(s.compare.combat.totalScore)],["현재 평균 가동률",pct(s.currentClass.averageUptime*100)],["비교 평균 가동률",pct(s.compareClass.averageUptime*100)],["바뀐 부위",compareNames.length?compareNames.join("<br>"):"없음"]].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}if(chart)drawCompareChart(chart,s)}
+function renderComparison(){const summaryBox=document.getElementById("compareSummary");const chart=document.getElementById("compareChart");if(!summaryBox&&!chart)return;ensureCompareSelection();const s=POB.comparisonSummary(DB,state,state.compareSelected,"avg");const compareNames=Object.keys(COMPARE_SLOT_LABELS).filter(slot=>state.selected[slot]!==state.compareSelected[slot]).map(slot=>{const r=runeByIdLocal(state.compareSelected[slot]);return `${COMPARE_SLOT_LABELS[slot]}: ${r?r.name:"없음"}`});if(summaryBox){summaryBox.innerHTML=[["밸류 차이",plusPct(s.valueDiffPct)],["DPS 차이",plusPct(s.dpsDiffPct)],["총 기대딜 차이",plusPct(s.totalDiffPct)],["직업 스킬 차이",s.currentSkill.rowCount?plusPct(s.skillDiffPct):"-"],["현재 직업 스킬 평균",s.currentSkill.rowCount?fmt(s.currentSkill.averageExpected):"-"],["비교 직업 스킬 평균",s.compareSkill.rowCount?fmt(s.compareSkill.averageExpected):"-"],["현재 DPS",fmtCombat(s.current.combat.adjustedDpsScore)],["비교 DPS",fmtCombat(s.compare.combat.adjustedDpsScore)],["현재 총 기대딜",fmtCombat(s.current.combat.totalScore)],["비교 총 기대딜",fmtCombat(s.compare.combat.totalScore)],["현재 평균 가동률",pct(s.currentClass.averageUptime*100)],["비교 평균 가동률",pct(s.compareClass.averageUptime*100)],["바뀐 부위",compareNames.length?compareNames.join("<br>"):"없음"]].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}if(chart)drawCompareChart(chart,s)}
 function fmtChartDamage(v){
   const x=Math.max(0,Math.round(n(v)));
   if(x>=100000000){
